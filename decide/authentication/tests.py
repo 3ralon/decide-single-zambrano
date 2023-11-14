@@ -85,16 +85,6 @@ class AuthTestCase(APITestCase):
 
         self.assertEqual(Token.objects.filter(user__username='voter1').count(), 0)
 
-    def test_register_bad_permissions(self):
-        data = {'username': 'voter1', 'password': '123'}
-        response = self.client.post('/authentication/login/', data, format='json')
-        self.assertEqual(response.status_code, 200)
-        token = response.json()
-
-        token.update({'username': 'user1'})
-        response = self.client.post('/authentication/register/', token, format='json')
-        self.assertEqual(response.status_code, 401)
-
     def test_register_bad_request(self):
         data = {'username': 'admin', 'password': 'admin'}
         response = self.client.post('/authentication/login/', data, format='json')
@@ -115,16 +105,30 @@ class AuthTestCase(APITestCase):
         response = self.client.post('/authentication/register/', token, format='json')
         self.assertEqual(response.status_code, 400)
 
-    def test_register(self):
+    def test_register_from_admin(self):
         data = {'username': 'admin', 'password': 'admin'}
         response = self.client.post('/authentication/login/', data, format='json')
         self.assertEqual(response.status_code, 200)
         token = response.json()
 
-        token.update({'username': 'user1', 'password': 'pwd1'})
+        token.update({'username': 'user1', 'password1': 'pwd123456789', 'password2': 'pwd123456789'})
         response = self.client.post('/authentication/register/', token, format='json')
         self.assertEqual(response.status_code, 201)
         self.assertEqual(
             sorted(list(response.json().keys())),
             ['token', 'user_pk']
         )
+
+    def test_register_from_user(self):
+        data = {'username': 'new_user', 'password1': 'new_password', 'password2': 'new_password'}
+        response = self.client.post('/authentication/register/', data, format='json')
+        self.assertEqual(response.status_code, 201) 
+        response_data = response.json()
+        self.assertTrue('token' in response_data)
+        self.assertTrue('user_pk' in response_data)
+
+        login_data = {'username': 'new_user', 'password': 'new_password'}
+        response = self.client.post('/authentication/login/', login_data, format='json')
+        self.assertEqual(response.status_code, 200)
+        token = response.json()
+        self.assertTrue('token' in token)
