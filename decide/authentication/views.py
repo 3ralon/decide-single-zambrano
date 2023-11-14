@@ -1,5 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.status import (
+        HTTP_200_OK,
         HTTP_201_CREATED,
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
@@ -13,6 +14,7 @@ from django.contrib.auth import authenticate, login
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
+from allauth.socialaccount.models import SocialAccount
 
 from .serializers import UserSerializer
 
@@ -37,12 +39,30 @@ class LogoutView(APIView):
 
 
 class RegisterView(APIView):
+    
+    def handle_google_login(self, request):
+
+        # Comprobar si es la primera vez que el usuario se logea con google
+        social_account = SocialAccount.objects.filter(user=request.user, provider='google').first()
+        if social_account is None:
+            # Creamos un nuevo usuario django para esta cuenta de google
+            social_account = SocialAccount.objects.create(user=request.user, provider='google')
+            social_account.save()
+            return Response({'user_pk': social_account.user.pk, 'token': social_account.user.token.key}, status=HTTP_201_CREATED)
+
+        login(request, request.user)
+
+        return Response({'message': 'Login successful', 'user_pk':request.user.pk, 'token': request.user.token.key}, status=HTTP_200_OK)
+    
     def post(self, request):
         # Verificar si el usuario que hace la solicitud es un superusuario o un usuario normal
         is_superuser = request.user.is_superuser
 
         # Si no es un superusuario, manejar el registro del usuario normal
         if not is_superuser:
+            if request.POST.get('provider') == 'google':
+                return self.handle_google_login(request)
+            
             form = UserCreationForm(request.data)
             if form.is_valid():
                 user = form.save()

@@ -61,11 +61,20 @@
 <body>
     <div class="form-container">
         <h2 id="register-title">Register</h2>
+        {% if user.is_authenticated %}
+        <p>You are already logged in as {{user.username}}</p>
+        {% endif %}
         <form method="POST" class="form-group" action="{% url 'register' %}">
             {% csrf_token %}
             <input type="hidden" name="token" value="{{token}}">
             {{form}}
             <button type="submit" class="btn btn-primary">Register</button>
+            {% load socialaccount %}
+
+            <div class="form-group">
+                <h2>Google Login</h2>
+                <a href="{% provider_login_url 'google' %}">Login with Google</a>
+            </div>
         </form>
     </div>
 </body>
