@@ -9,7 +9,11 @@ from base.models import Auth, Key
 
 class Question(models.Model):
     desc = models.TextField()
-
+    class QuestionType (models.TextChoices):
+        DEFAULT = 'DEFAULT', 'Default'
+        YESNO = 'YESNO', 'Yes/No'
+        MULTIPLE_CHOICE = 'MULTIPLE_CHOICE', 'Multiple Choice'
+    type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.DEFAULT)
     def __str__(self):
         return self.desc
 
