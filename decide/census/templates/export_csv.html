@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Descargar CSV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: 	rgb(208,232,242);
+        }
+        a {
+            display: inline-block;
+            padding: 10px 20px;
+            color: #fff;
+            background-color: #297ad1;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    .top-right {
+        font-family:'Franklin Gothic Medium';
+        position: absolute;
+        top: 30px;
+        right: 35px;
+        font-size: 35px;
+        color:midnightblue;
+        }
+    </style>
+</head>
+<body>
+    <a href="{% url 'export-to-csv' %}">Export to CSV</a>
+    <div class="top-right">DECIDE</div>
+</body>
+</html>

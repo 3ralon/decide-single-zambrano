@@ -1,22 +1,25 @@
 from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.status import (
+        HTTP_200_OK as ST_200,
         HTTP_201_CREATED as ST_201,
         HTTP_204_NO_CONTENT as ST_204,
         HTTP_400_BAD_REQUEST as ST_400,
         HTTP_401_UNAUTHORIZED as ST_401,
-        HTTP_409_CONFLICT as ST_409
-)
+        HTTP_409_CONFLICT as ST_409)
+import csv
 from base.perms import UserIsStaff
 from .models import Census
-import csv
 from django.http import HttpResponse
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, get_object_or_404
 
 
-class CensusExportationToCSV():    
-        
+class CensusExportationToCSV():        
     def export_to_csv(request):
         census = Census.objects.all()
         response = HttpResponse(
@@ -28,6 +31,9 @@ class CensusExportationToCSV():
         for profile in profile_fields:
             writer.writerow(profile)
         return response 
+
+    def export_page(request):
+        return render(request, 'export_csv.html')
     
 
 class CensusCreate(generics.ListCreateAPIView):
