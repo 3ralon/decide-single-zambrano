@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='question',
             name='question_type',
-            field=models.CharField(choices=[('DEFAULT', 'Default'), ('YESNO', 'Yes/No'), ('MULTIPLE_CHOICE', 'Multiple Choice')], default='DEFAULT', max_length=20),
+            field=models.CharField(choices=[('DEFAULT', 'Default'), ('YESNO', 'Yes/No')], default='DEFAULT', max_length=20),
         ),
     ]
