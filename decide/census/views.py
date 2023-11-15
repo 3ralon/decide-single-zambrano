@@ -9,10 +9,26 @@ from rest_framework.status import (
         HTTP_401_UNAUTHORIZED as ST_401,
         HTTP_409_CONFLICT as ST_409
 )
-
 from base.perms import UserIsStaff
 from .models import Census
+import csv
+from django.http import HttpResponse
 
+
+class CensusExportationToCSV():    
+        
+    def export_to_csv(request):
+        census = Census.objects.all()
+        response = HttpResponse(
+            content_type = 'text/csv',
+            headers = {"Content-Disposition": 'attachment; filename="censo.csv"'})
+        writer = csv.writer(response)
+        writer.writerow(['Voting','Voter'])
+        profile_fields = census.values_list('voting_id', 'voter_id')
+        for profile in profile_fields:
+            writer.writerow(profile)
+        return response 
+    
 
 class CensusCreate(generics.ListCreateAPIView):
     permission_classes = (UserIsStaff,)
