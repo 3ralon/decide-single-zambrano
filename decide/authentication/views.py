@@ -5,9 +5,10 @@ from rest_framework.status import (
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
 )
+from django.http import HttpResponseRedirect
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login
@@ -67,6 +68,7 @@ class RegisterView(APIView):
             if form.is_valid():
                 user = form.save()
                 token, _ = Token.objects.get_or_create(user=user)
+                HttpResponseRedirect('/', status=HTTP_201_CREATED)
                 return Response({'user_pk': user.pk, 'token': token.key}, status=HTTP_201_CREATED)
             else:
                 return Response(form.errors, status=HTTP_400_BAD_REQUEST)
