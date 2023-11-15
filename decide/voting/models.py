@@ -13,6 +13,8 @@ class Question(models.Model):
     class QuestionType (models.TextChoices):
         DEFAULT = 'DEFAULT', 'Default'
         YESNO = 'YESNO', 'Yes/No'
+        RANKING = 'RANKING', 'Ranking'
+
     question_type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.DEFAULT)
     
     def __str__(self):
