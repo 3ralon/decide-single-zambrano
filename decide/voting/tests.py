@@ -361,3 +361,42 @@ class QuestionsTests(StaticLiveServerTestCase):
 
         self.assertTrue(self.cleaner.find_element_by_xpath('/html/body/div/div[3]/div/div[1]/div/form/div/p').text == 'Please correct the errors below.')
         self.assertTrue(self.cleaner.current_url == self.live_server_url+"/admin/voting/question/add/")
+        
+class QuestionTestCase(BaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_create_question(self):
+        q = Question(desc='test question')
+        q.save()
+        self.assertEqual(q.desc, 'test question')
+        self.assertEqual(q.question_type, 'DEFAULT')
+        self.assertEqual(q.options.count(), 0)
+
+    def test_create_question_yesno_from_api(self):
+        data = {'desc': 'test question', 'question_type': 'YESNO'}
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+        # login with user no admin
+        self.login(user='noadmin')
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 403)
+
+        # login with user admin
+        self.login()
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {
+            'desc': 'Description example',
+            'question_type': 'YESNO',
+            'options': []
+        }
+
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 201)

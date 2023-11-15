@@ -6,10 +6,37 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from .models import Question, QuestionOption, Voting
-from .serializers import SimpleVotingSerializer, VotingSerializer
+from .serializers import SimpleVotingSerializer, VotingSerializer, QuestionSerializer
 from base.perms import UserIsStaff
 from base.models import Auth
 
+
+class QuestionView(generics.ListCreateAPIView):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+    filterset_fields = ('id', )
+    
+    
+    def post(self, request, *args, **kwargs):
+        self.permission_classes = (UserIsStaff,)
+        self.check_permissions(request)
+        for data in ['desc', 'question_type', 'options']:
+            if not data in request.data:
+                return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
+        question = Question(desc=request.data.get('desc'), question_type=request.data.get('question_type'))
+        question.save()
+        if question.question_type == 'YESNO':
+            op1 = QuestionOption(question=question, option='Yes', number=1)
+            op2 = QuestionOption(question=question, option='No', number=2)
+            op1.save()
+            op2.save()
+        else:
+            for idx, q_opt in enumerate(request.data.get('options')):
+                opt = QuestionOption(question=question, option=q_opt, number=idx)
+                opt.save()
+        return Response({}, status=status.HTTP_201_CREATED)
 
 class VotingView(generics.ListCreateAPIView):
     queryset = Voting.objects.all()
@@ -31,11 +58,11 @@ class VotingView(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         self.permission_classes = (UserIsStaff,)
         self.check_permissions(request)
-        for data in ['name', 'desc', 'question', 'question_opt']:
+        for data in ['name', 'desc', 'question', 'question_type', 'question_opt']:
             if not data in request.data:
                 return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
-        question = Question(desc=request.data.get('question'))
+        question = Question(desc=request.data.get('question'), question_type=request.data.get('question_type'))
         question.save()
         for idx, q_opt in enumerate(request.data.get('question_opt')):
             opt = QuestionOption(question=question, option=q_opt, number=idx)

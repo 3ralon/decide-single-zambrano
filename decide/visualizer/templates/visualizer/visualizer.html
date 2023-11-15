@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% load i18n static %}
 
+{% block title %}Visualizer{% endblock %}
+
 {% block extrahead %}
     <link type="text/css" rel="stylesheet"
          href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
@@ -15,7 +17,6 @@
                 <h1 class="navbar-brand">Decide</h1>
             </div>
         </nav>
-          
 
         <div class="voting container">
             <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
@@ -41,8 +42,16 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
 
+                <h2>Bar Chart</h2>
+                <div class="chart-container">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+                <h2>Pie Chart</h2>
+                <div class="chart-container">
+                    <canvas id="votesChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}
@@ -52,6 +61,8 @@
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
     <script src="https://unpkg.com/bootstrap@5.2.2/dist/js/bootstrap.js"></script>
+    <!-- Chartjs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4"></script>
 
     <script>
         var voting = {{voting|safe}};
@@ -64,6 +75,42 @@
                 }
             }
         }).mount('#app-visualizer')
+
+
+        function createScoreChart(labels, data) {
+            var ctx = document.getElementById('scoreChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Puntuación',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                }
+            });
+        }
+
+        function createVotesChart(labels, data) {
+            var ctx = document.getElementById('votesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['red', 'blue', 'green', 'yellow', 
+                        'orange', 'purple', 'pink', 'brown'],
+                    }]
+                }
+            });
+        }
+        createScoreChart(voting.postproc.map(opt => opt.option), voting.postproc.map(opt => opt.postproc));
+        createVotesChart(voting.postproc.map(opt => opt.option), voting.postproc.map(opt => opt.votes));
     </script>
+
 </body>
 {% endblock %}
