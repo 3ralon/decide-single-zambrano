@@ -81,6 +81,9 @@ class CensusTestCase(BaseTestCase):
         response = self.client.delete('/census/{}/'.format(1), data, format='json')
         self.assertEqual(response.status_code, 204)
         self.assertEqual(0, Census.objects.count())
+        
+        
+class CensusExportationTests:
     
     def test_positive_export_to_csv(self):
         response = self.client.get('/census/export-to-csv/', format='json')  

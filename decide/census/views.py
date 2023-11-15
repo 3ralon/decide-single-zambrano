@@ -19,7 +19,8 @@ from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, get_object_or_404
 
 
-class CensusExportationToCSV():        
+class CensusExportationToCSV():     
+       
     def export_to_csv(request):
         census = Census.objects.all()
         response = HttpResponse(
