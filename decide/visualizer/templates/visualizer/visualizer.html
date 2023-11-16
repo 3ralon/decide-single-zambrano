@@ -25,32 +25,36 @@
             <h2 v-else-if="!voting.end_date">Votación en curso</h2>
             <div v-else>
                 <h2 class="heading">Resultados:</h2>
+                
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Opción</th>
+                                <th>Puntuación</th>
+                                <th v-if="voting.question.question_type != 'RANKING'">Votos</th>
+                                <th v-else>Orden</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="opt in voting.postproc" :key="opt.number">
+                                <th>[[opt.option]]</th>
+                                <td>[[opt.postproc]]</td>
+                                <td class="text-muted">[[opt.votes]]</td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>Opción</th>
-                            <th>Puntuación</th>
-                            <th>Votos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="opt in voting.postproc" :key="opt.number">
-                            <th>[[opt.option]]</th>
-                            <td>[[opt.postproc]]</td>
-                            <td class="text-muted">[[opt.votes]]</td>
-                        </tr>
-                    </tbody>
-                </table>
+                    <div v-if="voting.question.question_type != 'RANKING'">
+                        <h2>Bar Chart</h2>
+                        <div class="chart-container">
+                            <canvas id="scoreChart"></canvas>
+                        </div>
+                        <h2>Pie Chart</h2>
+                        <div class="chart-container">
+                            <canvas id="votesChart"></canvas>
+                        </div>
+                    </div>
 
-                <h2>Bar Chart</h2>
-                <div class="chart-container">
-                    <canvas id="scoreChart"></canvas>
-                </div>
-                <h2>Pie Chart</h2>
-                <div class="chart-container">
-                    <canvas id="votesChart"></canvas>
-                </div>
             </div>
         </div>
     </div>
