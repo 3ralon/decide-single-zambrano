@@ -216,6 +216,7 @@ class VotingTestCase(BaseTestCase):
         response = self.client.put('/voting/{}/'.format(voting.pk), data, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), 'Voting already tallied')
+        
 
 class LogInSuccessTests(StaticLiveServerTestCase):
 
@@ -400,3 +401,104 @@ class QuestionTestCase(BaseTestCase):
 
         response = self.client.post('/voting/question/', data, format='json')
         self.assertEqual(response.status_code, 201)
+        
+class VotingRankingTestCase(BaseTestCase):
+    def setUp(self):
+        super().setUp()
+    
+    def tearDown(self):
+        return super().tearDown()
+    
+    def create_ranking_voting(self):
+        q = Question(desc='test ranking voting', question_type='RANKING')
+        q.save()
+        for i in range(1,4):
+            opt = QuestionOption(question=q, option='option {}'.format(i))
+            opt.save()
+        v = Voting(name='test ranking voting', question=q)
+        v.save()
+        
+        a, _ = Auth.objects.get_or_create(url=settings.BASEURL,
+                                            defaults = {'me': True, 'name': 'test auth'})
+        a.save()
+        v.auths.add(a)
+        return v
+        
+    def create_voters(self, v):
+        for i in range(10):
+            u, _ = User.objects.get_or_create(username='testRankingVoter{}'.format(i))
+            u.is_active = True
+            u.save()
+            c = Census(voter_id=u.id, voting_id=v.id)
+            c.save()
+            
+    def get_or_create_user(self, pk):
+        user, _ = User.objects.get_or_create(pk=pk)
+        user.username = 'user{}'.format(pk)
+        user.set_password('qwerty')
+        user.save()
+        return user
+            
+    def encrypt_msg(self, msg, v, bits=settings.KEYBITS):
+        pk = v.pub_key
+        p, g, y = (pk.p, pk.g, pk.y)
+        k = MixCrypt(bits=bits)
+        k.k = ElGamal.construct((p, g, y))
+        return k.encrypt(msg)
+            
+    def store_votes(self, v):
+        import random
+        from Crypto.Util.number import bytes_to_long
+        
+        voters = list(Census.objects.filter(voting_id=v.id))
+        voter = voters.pop()
+        ranking_list = list(range(1, len(v.question.options.all()) + 1))
+        
+        clear = {}
+        for voter in voters:
+            random.shuffle(ranking_list)
+            key = int(''.join(map(str, ranking_list)))
+            
+            if key in clear:
+                clear[key] += 1
+            else:
+                clear[key] = 1
+                
+            message = int(key)
+            a, b = self.encrypt_msg(message, v)
+            data = {
+                'voting': v.id,
+                'voter': voter.voter_id,
+                'vote': { 'a': a, 'b': b },
+            }
+            user = self.get_or_create_user(voter.voter_id)
+            self.login(user=user.username)
+            mods.post('store', json=data)
+
+        return clear
+
+    def test_ranking_voting(self):
+        v = self.create_ranking_voting()
+        self.create_voters(v)
+
+        v.create_pubkey()
+        v.start_date = timezone.now()
+        v.save()
+
+        clear = self.store_votes(v)
+
+        self.login()  # set token
+        v.tally_votes(self.token)
+
+        tally = v.tally
+        tally.sort()
+        tally = {k: len(list(x)) for k, x in itertools.groupby(tally)}        
+
+        ranking = clear.keys()
+        for order in ranking:
+            self.assertEqual(tally.get(order, 0), clear.get(order, 0))
+
+        ranking_selected = str(max(tally, key=tally.get))
+        postp = list(map(lambda o : str(o['number'] - 1), sorted(v.postproc, key=lambda p : p['postproc'])))
+        postp_selected = ''.join(postp)
+        self.assertEqual(ranking_selected, postp_selected)

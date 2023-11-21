@@ -118,9 +118,6 @@ class Voting(models.Model):
         tally = self.tally
         options = self.question.options.all()
 
-        print(tally)
-        print(options)
-
         opts = []
         if self.question.question_type == 'RANKING':
             votes = 0
@@ -149,8 +146,6 @@ class Voting(models.Model):
 
         data = { 'type': 'IDENTITY', 'options': opts }
         postp = mods.post('postproc', json=data)
-
-        print(opts)
 
         self.postproc = postp
         self.save()
