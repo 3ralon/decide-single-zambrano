@@ -281,6 +281,15 @@
                 },
                 decideSend(evt) {
                     evt.preventDefault();
+                    try {
+                        if (!this.processRanking(this.selectedRanking.toString())) {
+                            throw new Error('you must select one position for each option.');
+                        }
+                    } catch (error) {
+                        this.successVote = false
+                        this.showAlert("danger", '{% trans "Error: " %}' + error);
+                        return null;
+                    }
                     var v = this.decideEncrypt();
                     var data = {
                         vote: {a: v.alpha.toString(), b: v.beta.toString()},
@@ -298,6 +307,15 @@
                             this.succesVote = false;
                             this.showAlert("danger", '{% trans "Error: " %}' + error);
                         });
+                },
+                processRanking(ranking) {
+                    let rankingArr = ranking.split(',');
+                    let rankingSet = new Set(rankingArr);
+                    let numOptions = this.voting.question.options.length
+                    if (rankingSet.size !== rankingArr.length || rankingArr.length !== numOptions) {
+                        return false
+                    }
+                    return true
                 },
                 showAlert(lvl, msg) {
                     this.alertLvl = lvl;
