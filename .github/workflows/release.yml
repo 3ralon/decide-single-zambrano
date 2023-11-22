@@ -4,12 +4,6 @@ on:
   push: 
     tags:
       - '*'
-    branches:
-	   - master
-  workflow_call:
-    secrets:
-      CODACY_PROJECT_TOKEN:
-        required: true
 
 permissions:
   contents: write
