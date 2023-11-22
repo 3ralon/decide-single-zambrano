@@ -27,6 +27,7 @@ from django.views.generic import TemplateView
 import json
 
 from .serializers import UserSerializer
+
 class LoginView(TemplateView):
     template_name = 'log_in.html'
     def post(self, request):
@@ -41,6 +42,9 @@ class LoginView(TemplateView):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
+                
+                # Iniciar sesión con Google si está asociado
+                social_account = SocialAccount.objects.filter(user=user, provider='google').first()
                 if not remember_me:
                     request.session.set_expiry(0)
 
@@ -54,6 +58,7 @@ class LoginView(TemplateView):
             mensaje = "Error al inicar sesión"
 
         return render(request, "log_in.html", {"form": form, "mensaje": mensaje})
+    
 class GetUserView(APIView):
     def post(self, request):
         key = request.data.get('token', '')
