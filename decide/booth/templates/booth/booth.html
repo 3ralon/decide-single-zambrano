@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_booth.html" %}
 {% load i18n static %}
 
 {% block extrahead %}
@@ -14,7 +14,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-dark bg-primary">
         <div class="container-fluid">
-            <div class="navbar-brand" >Decide</div>
+            <a href="{% url 'home' %}" class="navbar-brand">Decide</a>    
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>

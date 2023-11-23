@@ -402,6 +402,10 @@ class VotingModelTestCase(BaseTestCase):
 
         self.v = Voting(name='Votacion', question=q)
         self.v.save()
+
+class QuestionTestCase(BaseTestCase):
+
+    def setUp(self):
         super().setUp()
 
     def tearDown(self):
@@ -411,3 +415,34 @@ class VotingModelTestCase(BaseTestCase):
     def testExist(self):
         v=Voting.objects.get(name='Votacion')
         self.assertEquals(v.question.options.all()[0].option, "opcion 1")
+
+    def test_create_question(self):
+        q = Question(desc='test question')
+        q.save()
+        self.assertEqual(q.desc, 'test question')
+        self.assertEqual(q.question_type, 'DEFAULT')
+        self.assertEqual(q.options.count(), 0)
+
+    def test_create_question_yesno_from_api(self):
+        data = {'desc': 'test question', 'question_type': 'YESNO'}
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+        # login with user no admin
+        self.login(user='noadmin')
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 403)
+
+        # login with user admin
+        self.login()
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {
+            'desc': 'Description example',
+            'question_type': 'YESNO',
+            'options': []
+        }
+
+        response = self.client.post('/voting/question/', data, format='json')
+        self.assertEqual(response.status_code, 201)
