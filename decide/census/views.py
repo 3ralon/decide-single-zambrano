@@ -21,11 +21,49 @@ from django.shortcuts import render, get_object_or_404
 
 class CensusExportationToCSV():     
        
+    def export_voting_to_csv(request, voting_id):
+        census = Census.objects.filter(voting_id=voting_id)  
+        response = HttpResponse(
+            content_type='text/csv',
+            headers={
+                "Content-Disposition": 'attachment; filename="censo.csv"'
+                }
+        )
+        writer = csv.writer(response)
+        writer.writerow(['Voting', 'Voter'])
+        for profile in census:
+            writer.writerow([profile.voting_id, profile.voter_id])
+        return response
+    
     def export_to_csv(request):
+        if request.method == 'GET':
+            voting_id = request.GET.get('voting_id')
+            if voting_id is not None:
+                census = Census.objects.filter(voting_id=voting_id)
+                response = HttpResponse(
+                    content_type='text/csv',
+                    headers={
+                        "Content-Disposition": 'attachment; filename="censo.csv"'
+                    }
+                )
+                writer = csv.writer(response)
+                writer.writerow(['Voting', 'Voter'])
+                for profile in census:
+                    writer.writerow([profile.voting_id, profile.voter_id])
+                return response
+            else:
+                return HttpResponse("No se proporcionó una ID de votación válida")
+        else:
+            return HttpResponse("Método de solicitud no válido")
+
+    def export_all_census(request):
         census = Census.objects.all()
         response = HttpResponse(
             content_type = 'text/csv',
-            headers = {"Content-Disposition": 'attachment; filename="censo.csv"'})
+            headers = {
+                "Content-Disposition": 'attachment; filename="CensoCompleto.csv"'
+                }
+            )
         writer = csv.writer(response)
         writer.writerow(['Voting','Voter'])
         profile_fields = census.values_list('voting_id', 'voter_id')
