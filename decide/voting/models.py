@@ -9,7 +9,14 @@ from base.models import Auth, Key
 
 class Question(models.Model):
     desc = models.TextField()
+    
+    class QuestionType (models.TextChoices):
+        DEFAULT = 'DEFAULT', 'Default'
+        YESNO = 'YESNO', 'Yes/No'
+        RANKING = 'RANKING', 'Ranking'
 
+    question_type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.DEFAULT)
+    
     def __str__(self):
         return self.desc
 
@@ -112,16 +119,30 @@ class Voting(models.Model):
         options = self.question.options.all()
 
         opts = []
-        for opt in options:
+        if self.question.question_type == 'RANKING':
+            votes = 0
             if isinstance(tally, list):
-                votes = tally.count(opt.number)
-            else:
-                votes = 0
-            opts.append({
-                'option': opt.option,
-                'number': opt.number,
-                'votes': votes
-            })
+                mode = 0
+                for i,v in enumerate(tally):
+                    mode = i if tally.count(v) > mode else mode
+                votes = [int(digit) for digit in str(tally[mode])]
+                for i,opt in enumerate(options):
+                    opts.append({
+                        'option': opt.option,
+                        'number': opt.number,
+                        'votes': votes[i]
+                })
+        else:
+            for opt in options:
+                if isinstance(tally, list):
+                    votes = tally.count(opt.number)
+                else:
+                    votes = 0
+                opts.append({
+                    'option': opt.option,
+                    'number': opt.number,
+                    'votes': votes
+                })
 
         data = { 'type': 'IDENTITY', 'options': opts }
         postp = mods.post('postproc', json=data)
