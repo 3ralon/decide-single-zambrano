@@ -40,3 +40,4 @@ urllib3==1.26.18
 wsproto==1.2.0
 django-allauth
 django-sslserver
+django-environ
