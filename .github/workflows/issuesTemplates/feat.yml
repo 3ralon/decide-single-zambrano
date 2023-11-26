@@ -1,0 +1,21 @@
+name: Feature Template
+description: "Template para la creación de una feature request"
+labels:[enhancement]
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process_feature-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Feature Request
+        run: |
+          echo "Feature Request"
+
+#Descripción Proporciona una descripción clara y concisa de la funcionalidad que se desea implementar
+#Motivo
+Motivo para su su implementación
+#Subsistemas afectados
+Descripción de que partes son afectadas por la implementación
+
