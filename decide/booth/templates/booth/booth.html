@@ -118,13 +118,25 @@
         <div v-if="!signup">
             <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
             <h2>[[ voting.question.desc ]]</h2>
+            <h5 v-show="voting.question.question_type == 'RANKING'">Ordena en función de tus preferencias</h3>
+            <h5 v-show="voting.question.question_type != 'RANKING'">Selecciona una de las preguntas</h3>
             <form v-for="opt in voting.question.options" :key="opt.number">
                 <div class="form-group">
-                    <input type="radio" v-model="selected"
-                                :id="'q' + opt.number"
-                                name="question"
-                                :value="opt.number">
+                    <div v-if="voting.question.question_type == 'RANKING'">
+                        <label>[[ opt.option ]]</label>
+                        <select v-model="selectedRanking[opt.number - 1]">
+                            <option v-for="rank in Array(voting.question.options.length).fill().map((_, index) => index + 1)" :key="rank">
+                                [[ rank ]]
+                            </option>
+                        </select>
+                    </div>
+                    <div v-else>
+                        <input type="radio" v-model="selected"
+                            :id="'q' + opt.number"
+                            name="question"
+                            :value="opt.number">
                         [[ opt.option ]]
+                    </div>
                 </div>
             </form>
             <button class="btn btn-primary mt-3" v-on:click="decideSend">
@@ -163,6 +175,7 @@
             data() {
                 return {
                     voting: voting,
+                    selectedRanking: [],
                     selected: "",
                     signup: true,
                     successVote: false,
@@ -257,12 +270,26 @@
                     this.successVote = false;
                 },
                 decideEncrypt() {
-                    var bigmsg = BigInt.fromJSONObject(this.selected.toString());
+                    var bigmsh = BigInt();
+                    if (voting.question.question_type == 'RANKING') {
+                        bigmsg = BigInt.fromJSONObject(this.selectedRanking.toString());
+                    } else {
+                        bigmsg = BigInt.fromJSONObject(this.selected.toString());  
+                    }
                     var cipher = ElGamal.encrypt(this.bigpk, bigmsg);
                     return cipher;
                 },
                 decideSend(evt) {
                     evt.preventDefault();
+                    try {
+                        if (!this.processRanking(this.selectedRanking.toString())) {
+                            throw new Error('you must select one position for each option.');
+                        }
+                    } catch (error) {
+                        this.successVote = false
+                        this.showAlert("danger", '{% trans "Error: " %}' + error);
+                        return null;
+                    }
                     var v = this.decideEncrypt();
                     var data = {
                         vote: {a: v.alpha.toString(), b: v.beta.toString()},
@@ -280,6 +307,15 @@
                             this.succesVote = false;
                             this.showAlert("danger", '{% trans "Error: " %}' + error);
                         });
+                },
+                processRanking(ranking) {
+                    let rankingArr = ranking.split(',');
+                    let rankingSet = new Set(rankingArr);
+                    let numOptions = this.voting.question.options.length
+                    if (rankingSet.size !== rankingArr.length || rankingArr.length !== numOptions) {
+                        return false
+                    }
+                    return true
                 },
                 showAlert(lvl, msg) {
                     this.alertLvl = lvl;
