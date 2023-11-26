@@ -5,6 +5,9 @@ from rest_framework.status import (
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
 )
+from django.contrib.auth import logout
+from django.http import JsonResponse
+from rest_framework.authtoken.models import Token
 from django.http import HttpResponseRedirect
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
@@ -78,6 +81,12 @@ class LogoutView(TemplateView):
         if request.user.is_authenticated:
             logout(request)
         return redirect("/")
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            # Delete the user's token.
+            Token.objects.filter(user=request.user).delete()
+            logout(request)
+        return JsonResponse({'status':'OK'})
     
 
 class RegisterView(APIView):
