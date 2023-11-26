@@ -217,7 +217,6 @@ class VotingTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), 'Voting already tallied')
         
-
     def test_to_string(self):
         #Crea un objeto votacion
         v = self.create_voting()
@@ -389,6 +388,21 @@ class QuestionsTests(StaticLiveServerTestCase):
         self.assertTrue(self.cleaner.find_element_by_xpath('/html/body/div/div[3]/div/div[1]/div/form/div/p').text == 'Please correct the errors below.')
         self.assertTrue(self.cleaner.current_url == self.live_server_url+"/admin/voting/question/add/")
         
+        
+class VotingModelTestCase(BaseTestCase):
+    
+    def setUp(self):
+        q = Question(desc='Descripcion')
+        q.save()
+        
+        opt1 = QuestionOption(question=q, option='opcion 1')
+        opt1.save()
+        opt1 = QuestionOption(question=q, option='opcion 2')
+        opt1.save()
+
+        self.v = Voting(name='Votacion', question=q)
+        self.v.save()
+
 class QuestionTestCase(BaseTestCase):
 
     def setUp(self):
@@ -396,6 +410,11 @@ class QuestionTestCase(BaseTestCase):
 
     def tearDown(self):
         super().tearDown()
+        self.v = None
+
+    def testExist(self):
+        v=Voting.objects.get(name='Votacion')
+        self.assertEquals(v.question.options.all()[0].option, "opcion 1")
 
     def test_create_question(self):
         q = Question(desc='test question')
@@ -427,6 +446,7 @@ class QuestionTestCase(BaseTestCase):
 
         response = self.client.post('/voting/question/', data, format='json')
         self.assertEqual(response.status_code, 201)
+
 
         
 class VotingRankingTestCase(BaseTestCase):
@@ -529,4 +549,5 @@ class VotingRankingTestCase(BaseTestCase):
         postp = list(map(lambda o : str(o['number'] - 1), sorted(v.postproc, key=lambda p : p['postproc'])))
         postp_selected = ''.join(postp)
         self.assertEqual(ranking_selected, postp_selected)
+
 
