@@ -50,6 +50,7 @@ class AdminTestCase(StaticLiveServerTestCase):
        #Si no, aparece este error
         self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME,'errornote'))==1)
         time.sleep(5)
+
         
 class GoogleLoginTestCase(StaticLiveServerTestCase):
 
@@ -76,3 +77,4 @@ class GoogleLoginTestCase(StaticLiveServerTestCase):
         google_login_button.click()
 
         self.driver.find_element(By.CSS_SELECTOR, "button").click()
+
