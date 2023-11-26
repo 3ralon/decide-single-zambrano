@@ -11,15 +11,54 @@ from rest_framework.authtoken.models import Token
 from django.shortcuts import redirect, render
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login,logout
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
 from allauth.socialaccount.models import SocialAccount
+from django.contrib.auth import authenticate
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from rest_framework import status
+from django.contrib.auth.forms import AuthenticationForm
+from .forms import LoginForm
+from django.views.generic import TemplateView
+import json
 
 from .serializers import UserSerializer
 
+class LoginView(TemplateView):
+    template_name = 'log_in.html'
+    def post(self, request):
+        form = LoginForm(request.POST)
 
+        mensaje = None
+
+        if form.is_valid():
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
+            remember_me = form.cleaned_data.get("remember_me")
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                
+                # Iniciar sesión con Google si está asociado
+                social_account = SocialAccount.objects.filter(user=user, provider='google').first()
+                if not remember_me:
+                    request.session.set_expiry(0)
+
+                next_url = request.GET.get("next", None)
+                if next_url:
+                    return redirect(next_url)
+                return redirect("/")
+            else:
+                mensaje = "Credenciales incorrectas"
+        else:
+            mensaje = "Error al inicar sesión"
+
+        return render(request, "log_in.html", {"form": form, "mensaje": mensaje})
+    
 class GetUserView(APIView):
     def post(self, request):
         key = request.data.get('token', '')
@@ -27,17 +66,19 @@ class GetUserView(APIView):
         return Response(UserSerializer(tk.user, many=False).data)
 
 
-class LogoutView(APIView):
-    def post(self, request):
-        key = request.data.get('token', '')
-        try:
-            tk = Token.objects.get(key=key)
-            tk.delete()
-        except ObjectDoesNotExist:
-            pass
 
-        return Response({})
 
+    def get(self, request):
+        form = LoginForm(None)
+
+        return render(request, "log_in.html", {"form": form, "msg": None})
+
+class LogoutView(TemplateView):
+    def get(self, request):
+        if request.user.is_authenticated:
+            logout(request)
+        return redirect("/")
+    
 
 class RegisterView(APIView):
     
