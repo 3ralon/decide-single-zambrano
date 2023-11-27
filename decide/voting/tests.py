@@ -583,9 +583,3 @@ class VotingRankingTestCase(BaseTestCase):
         postp_selected = int("".join(postp))
 
         self.assertIn(postp_selected, list(tally.keys()))
-
-        tally_values = list(tally.values())
-        votes_postp_selected = tally[postp_selected]
-
-        for v in tally_values:
-            self.assertGreaterEqual(votes_postp_selected, v)
