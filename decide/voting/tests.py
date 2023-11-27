@@ -572,7 +572,7 @@ class VotingRankingTestCase(BaseTestCase):
 
         ranking = clear.keys()
         for order in ranking:
-            self.assertEqual(tally.get(order, 0), clear.get(order, 0))
+            self.assertEquals(tally.get(order, 0), clear.get(order, 0))
 
         postp = list(
             map(
@@ -581,4 +581,11 @@ class VotingRankingTestCase(BaseTestCase):
             )
         )
         postp_selected = int("".join(postp))
+
         self.assertIn(postp_selected, list(tally.keys()))
+
+        tally_values = list(tally.values())
+        votes_postp_selected = tally[postp_selected]
+
+        for v in tally_values:
+            self.assertGreaterEqual(votes_postp_selected, v)
