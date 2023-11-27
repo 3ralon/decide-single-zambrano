@@ -152,7 +152,7 @@ class Voting(models.Model):
                         {
                             "option": opt.option,
                             "number": opt.number,
-                            "votes": votes.index(opt.number - 1),
+                            "votes": votes.index(opt.number),
                         }
                     )
         else:
