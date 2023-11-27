@@ -528,7 +528,7 @@ class VotingRankingTestCase(BaseTestCase):
 
         voters = list(Census.objects.filter(voting_id=v.id))
         voter = voters.pop()
-        ranking_list = list(range(1, len(v.question.options.all()) + 1))
+        ranking_list = list(map(lambda o: o.number, v.question.options.all()))
 
         clear = {}
         for voter in voters:
@@ -576,7 +576,7 @@ class VotingRankingTestCase(BaseTestCase):
 
         postp = list(
             map(
-                lambda o: str(o["number"] - 1),
+                lambda o: str(o["number"]),
                 sorted(v.postproc, key=lambda p: p["postproc"]),
             )
         )
