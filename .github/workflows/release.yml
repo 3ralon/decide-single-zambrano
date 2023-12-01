@@ -1,0 +1,32 @@
+name: release
+
+on:
+  push: 
+    tags:
+      - '*'
+    branches:
+      - master
+
+  workflow_call:
+    secrets:
+      CODACY_PROJECT_TOKEN:
+        required: true
+
+
+permissions:
+  contents: write
+
+jobs:
+  buildTest:
+    uses: 3ralon/decide-single-zambrano/.github/workflows/django.yml@master
+    secrets: 
+      CODACY_PROJECT_TOKEN: ${{secrets.CODACY_PROJECT_TOKEN}}
+     
+  release:
+    needs: buildTest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Release
+        uses: softprops/action-gh-release@v1

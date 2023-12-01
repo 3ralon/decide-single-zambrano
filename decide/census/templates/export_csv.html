@@ -37,7 +37,15 @@
     </style>
 </head>
 <body>
-    <a href="{% url 'export-to-csv' %}">Export to CSV</a>
+    
+    <a href="{% url 'export-all-census' %}" class="elemento-bloque">Exportar todas las votaciones a CSV</a>
+    <form action="{% url 'export-to-csv' %}" method="GET" class="elemento-bloque">
+        <label for="voting_id">Introduce la ID de votación:</label>
+        <input type="number" id="voting_id" name="voting_id" required>
+        <input type="submit" value="Exportar a votación a CSV">
+    </form>
+       
     <div class="top-right">DECIDE</div>
+
 </body>
 </html>
