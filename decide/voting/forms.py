@@ -1,5 +1,7 @@
 from django import forms
+from census.models import Census
 from .models import Question, QuestionOption, Voting
+from django.contrib.auth.models import User
 
 class VotingForm(forms.ModelForm):
     class Meta:
@@ -15,5 +17,12 @@ class QuestionOptionForm(forms.ModelForm):
     class Meta:
         model = QuestionOption
         fields = ['option'] 
+
+class CensusForm(forms.ModelForm):
+    user = forms.ModelMultipleChoiceField(queryset=User.objects.all())
+    
+    class Meta:
+        model = Census 
+        fields = ['user']  
 
 QuestionOptionFormSet = forms.modelformset_factory(QuestionOption, form=QuestionOptionForm, extra=5)

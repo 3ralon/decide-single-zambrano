@@ -22,6 +22,7 @@
             <a href="{% url 'voting_start' voting.id %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">Iniciar Votación</a>
         {% endif %}
         {% if voting.start_date and not voting.end_date%}
+            <a href="{% url 'census_voting' voting.id %}" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-2 rounded text-xs">Añadir censo</a>
             <a href="{% url 'voting_stop' voting.id %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">Parar Votación</a>
         {% endif %}
         {% if not voting.postproc and not voting.tally and voting.start_date and voting.end_date%}

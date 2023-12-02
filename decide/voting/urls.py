@@ -8,6 +8,7 @@ urlpatterns = [
     path('question/', views.QuestionView.as_view(), name='question'),
     path('list/', views.VotingList.as_view(), name='voting_list'),
     path('add/', views.VotingCreation.as_view(), name='voting_creation'),
+    path('census/<int:voting_id>/', views.CensusVoting.as_view(), name='census_voting'),
     path('start/<int:voting_id>/', views.VotingList.start_voting, name='voting_start'),
     path('stop/<int:voting_id>/', views.VotingList.stop_voting, name='voting_stop'),
     path('tally/<int:voting_id>/', views.VotingTally.as_view(), name='voting_tally'),

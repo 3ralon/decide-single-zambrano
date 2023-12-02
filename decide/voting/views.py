@@ -8,8 +8,9 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from census.models import Census
 
-from voting.forms import QuestionForm, QuestionOptionFormSet, VotingForm
+from voting.forms import CensusForm, QuestionForm, QuestionOptionFormSet, VotingForm
 
 from .models import Question, QuestionOption, Voting
 from .serializers import SimpleVotingSerializer, VotingSerializer, QuestionSerializer
@@ -186,6 +187,28 @@ class VotingCreation(APIView):
                 form.save()
                 return redirect('voting_list')
             return render(request, 'voting_creation.html', {'form': form})
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+    
+class CensusVoting(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request, voting_id):
+        if request.user.is_staff:
+            form = CensusForm()
+            return render(request, 'census_voting.html', {'form': form})
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+
+    def post(self, request, voting_id):
+        if self.request.user.is_staff:
+            form = CensusForm(request.POST)
+            if form.is_valid():
+                users = form.cleaned_data['user']
+                for user in users:
+                    census = Census(voting_id=voting_id, voter_id=user.id)
+                    census.save()
+                return redirect('voting_list')
+            return render(request, 'census_voting.html', {'form': form})
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
 
