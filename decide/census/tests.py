@@ -14,6 +14,7 @@ from .models import Census
 from base import mods
 from base.tests import BaseTestCase
 from datetime import datetime
+from django.urls import reverse
 
 
 class CensusTestCase(BaseTestCase):
@@ -83,9 +84,39 @@ class CensusTestCase(BaseTestCase):
         self.assertEqual(0, Census.objects.count())
         
         
-class CensusExportationTests:
+class CensusExportationTests(BaseTestCase):
     
-    def test_positive_export_to_csv(self):
+    def setUp(self):
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+
+    def test_get_unauthenticated_user(self):
+        response = self.client.get(reverse('export_page'))
+        self.assertEqual(response.status_code, 403)  
+
+    def test_get_export_to_csv(self):
+        self.login('noadmin')        
+        response = self.client.get(reverse('export_page'))
+        self.assertEqual(response.status_code, 403) 
+         
+        self.login('admin')         
+        response = self.client.get(reverse('export_page'))
+        self.assertEqual(response.status_code, 403) 
+        
+    def test_post_export_to_csv(self):
+        self.login('noadmin')   
+        response = self.client.post(reverse('export_page'), data={})
+        self.assertEqual(response.status_code, 403)  
+        
+        self.login('admin')           
+        response = self.client.post(reverse('export_page'), data={})
+        self.assertEqual(response.status_code, 403)  
+
+    '''def test_positive_export_to_csv(self):
+        self.login()
         response = self.client.get('/census/export-to-csv/', format='json')  
         self.assertEqual(response.status_code, 200)  
         self.assertEqual(response['content-type'], 'text/csv') 
@@ -93,10 +124,10 @@ class CensusExportationTests:
         self.assertEqual(response.content.decode(), expected_content)
 
     def test_admin_access(self):
-        self.client.login(username='admin', password='admin')
+        self.login()
         response = self.client.get('/census/export-to-csv/', format='json')
-        self.assertEqual(response.status_code, 200) 
-
+        self.assertEqual(response.status_code, 200) '''
+    
 
 class CensusTest(StaticLiveServerTestCase):
     def setUp(self):
