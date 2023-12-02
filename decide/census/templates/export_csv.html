@@ -34,18 +34,30 @@
         font-size: 35px;
         color:midnightblue;
         }
+    #formulario-csv {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+    }
+
     </style>
 </head>
 <body>
-    
-    <a href="{% url 'export-all-census' %}" class="elemento-bloque">Exportar todas las votaciones a CSV</a>
-    <form action="{% url 'export-to-csv' %}" method="GET" class="elemento-bloque">
-        <label for="voting_id">Introduce la ID de votación:</label>
-        <input type="number" id="voting_id" name="voting_id" required>
-        <input type="submit" value="Exportar a votación a CSV">
-    </form>
-       
     <div class="top-right">DECIDE</div>
+    <section id="formulario-csv">
+        <form action="{% url 'export-all-census' %}" method="POST" class="elemento-bloque">
+            {% csrf_token %}
+            <input type="submit" value="Exportar CSV completo">
+        </form>
+
+        <form action="{% url 'export-to-csv' %}" method="POST" class="elemento-bloque">
+            {% csrf_token %}
+            <label for="voting_id">Introduce la ID de votación:</label>
+            <input type="number" id="voting_id" min="0" max="{{ votaciones }}" name="voting_id" required>
+            <input type="submit" value="Exportar a votación a CSV">
+        </form>
+    </section>
 
 </body>
+
 </html>
