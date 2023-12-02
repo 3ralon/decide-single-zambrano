@@ -156,13 +156,6 @@ class RegisterView(APIView):
             
             except IntegrityError:
                 return Response({}, status=HTTP_400_BAD_REQUEST)
-        
-    def get_google_login_url(self, request):
-        try:
-            social_account = SocialAccount.objects.get(user=request.user, provider='google')
-            return social_account.get_login_url(request, redirect_to='/')
-        except SocialAccount.DoesNotExist:
-            return None
 
 
     def get(self, request):

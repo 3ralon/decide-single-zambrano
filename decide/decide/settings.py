@@ -41,7 +41,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-SITE_ID = 3#int(env("SITE_ID"))
+SITE_ID = int(env("SITE_ID"))
 
 # Application definition
 
