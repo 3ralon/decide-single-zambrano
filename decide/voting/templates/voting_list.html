@@ -8,10 +8,14 @@
         <a href="{% url 'voting_creation' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs">Crear Votación</a>    
     </div>
     {% for voting in votings %}
-    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 relative"> 
         <h3 class="text-gray-700 text-lg font-bold mb-2">{{ voting.name }}</h3>
         <p class="text-gray-700 text-sm mb-2">Descripción: {{ voting.desc }}</p>
         <p class="text-gray-700 text-sm mb-2">Pregunta: {{ voting.question }}</p>
+        <form method="POST" action="{% url 'voting_delete' voting.id %}" class="absolute top-0 right-0">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">X</button>
+        </form>
         {% if voting.start_date %}
             <p class="text-gray-700 text-sm mb-2">Fecha de inicio: {{ voting.start_date }}</p>
         {% endif %}

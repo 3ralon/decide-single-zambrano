@@ -84,6 +84,16 @@ class QuestionCreation(APIView):
                 return redirect('question_list')
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
+        
+class QuestionDelete(APIView):
+    permission_classes = [IsAdminUser]
+    def post(self, request, question_id):
+        if request.user.is_staff:
+            question = get_object_or_404(Question, pk=question_id)
+            question.delete()
+            return redirect('question_list')
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
 
 
 class VotingView(generics.ListCreateAPIView):
@@ -187,6 +197,16 @@ class VotingCreation(APIView):
                 form.save()
                 return redirect('voting_list')
             return render(request, 'voting_creation.html', {'form': form})
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+        
+class VotingDelete(APIView):
+    permission_classes = [IsAdminUser]
+    def post(self, request, voting_id):
+        if request.user.is_staff:
+            voting = get_object_or_404(Voting, pk=voting_id)
+            voting.delete()
+            return redirect('voting_list')
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
     
