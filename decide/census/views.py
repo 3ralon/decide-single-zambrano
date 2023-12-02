@@ -37,7 +37,7 @@ class CensusExportationToCSV(TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated == None or request.user.is_authenticated is False:
+        if request.user.is_authenticated is None or request.user.is_authenticated is False:
             return HttpResponseForbidden('Debes estar logueado para poder descargar el csv')
         elif not request.user.is_superuser:
             return HttpResponseForbidden('Solo los superuser pueden descargar los datos del censo')
