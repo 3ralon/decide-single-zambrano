@@ -19,15 +19,15 @@
             <p class="text-gray-700 text-sm mb-2">Fecha de cierre: {{ voting.end_date }}</p>
         {% endif %}
         {% if not voting.start_date %}
-            <a href="/admin/voting/voting/" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">Iniciar Votación</a>
+            <a href="{% url 'voting_start' voting.id %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">Iniciar Votación</a>
         {% endif %}
         {% if voting.start_date and not voting.end_date%}
             <a href="{% url 'voting_stop' voting.id %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">Parar Votación</a>
         {% endif %}
-        {% if not voting.tally and voting.start_date and voting.end_date%}
-            <a href="/admin/voting/voting/" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">Contar votos</a>
+        {% if not voting.postproc and not voting.tally and voting.start_date and voting.end_date%}
+            <a href="{% url 'voting_tally' voting.id %}" class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded text-xs">Contar votos</a>
         {% endif %}
-        {% if voting.tally %}
+        {% if voting.postproc %}
             <a href="{% url 'visualizer' voting.id %}" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded text-xs">Ver Resultados</a>
         {% endif %}
     </div>

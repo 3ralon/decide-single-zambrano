@@ -132,6 +132,18 @@ class VotingList(APIView):
             return render(request, 'voting_list.html', {'votings': votings})
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
+    
+    def start_voting(self, voting_id):
+        if self.user.is_staff:
+            voting = get_object_or_404(Voting, pk=voting_id)
+            if(voting.start_date):
+                return HttpResponseRedirect(reverse('voting_list'))
+            voting.create_pubkey()
+            voting.start_date = timezone.now()
+            voting.save()
+            return redirect('voting_list')
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
             
     def stop_voting(self, voting_id):
         if self.user.is_staff:
@@ -144,6 +156,19 @@ class VotingList(APIView):
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
             
+class VotingTally(APIView): 
+    #CHECK IF AUTH WORKS
+    permission_classes = [IsAdminUser]
+    def get(self, request, voting_id):
+        if request.user.is_staff:
+            voting = get_object_or_404(Voting, pk=voting_id)
+            if(voting.tally or not voting.end_date or not voting.start_date):
+                return HttpResponseRedirect(reverse('voting_list'))
+            token = request.session.get('auth-token', '')
+            voting.tally_votes(token)
+            return redirect('voting_list')
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
         
 class VotingCreation(APIView):
     permission_classes = [IsAdminUser]

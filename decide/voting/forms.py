@@ -4,7 +4,7 @@ from .models import Question, QuestionOption, Voting
 class VotingForm(forms.ModelForm):
     class Meta:
         model = Voting
-        fields = ['name', 'desc', 'question'] 
+        fields = ['name', 'desc', 'question', 'auths'] 
 
 class QuestionForm(forms.ModelForm):
     class Meta:
