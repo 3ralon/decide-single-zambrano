@@ -1,11 +1,11 @@
 name: release
 
 on:
-  push: 
+  push:
     tags:
       - '*'
     branches:
-	   - master
+      - master
   workflow_call:
     secrets:
       CODACY_PROJECT_TOKEN:
@@ -17,9 +17,9 @@ permissions:
 jobs:
   buildTest:
     uses: 3ralon/decide-single-zambrano/.github/workflows/django.yml@master
-    secrets: 
+    secrets:
       CODACY_PROJECT_TOKEN: ${{secrets.CODACY_PROJECT_TOKEN}}
-     
+
   release:
     needs: buildTest
     runs-on: ubuntu-latest
