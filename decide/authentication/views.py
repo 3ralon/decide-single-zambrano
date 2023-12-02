@@ -6,9 +6,8 @@ from rest_framework.status import (
         HTTP_401_UNAUTHORIZED
 )
 from django.contrib.auth import logout
-from django.http import HttpResponse, JsonResponse
+from django.http import  JsonResponse
 from rest_framework.authtoken.models import Token
-from django.http import HttpResponseRedirect
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.shortcuts import redirect, render
@@ -17,17 +16,13 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login,logout
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import ObjectDoesNotExist
 from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth import authenticate
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from rest_framework import status
-from django.contrib.auth.forms import AuthenticationForm
 from .forms import LoginForm
 from django.views.generic import TemplateView
-import json
 
 from .serializers import UserSerializer
 
