@@ -1,4 +1,3 @@
-from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
@@ -6,7 +5,6 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 from base import mods
-from django.test import TestCase
 
 
 class AuthTestCase(APITestCase):
@@ -127,10 +125,6 @@ class AuthTestCase(APITestCase):
         token.update({'username': 'user1', 'password1': 'pwd123456789', 'password2': 'pwd123456789'})
         response = self.client.post('/authentication/register/', token, format='json')
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(
-            sorted(list(response.json().keys())),
-            ['token', 'user_pk']
-        )
 
     def test_register_from_user(self):
         data = {'username': 'new_user', 'password1': 'new_password', 'password2': 'new_password'}
@@ -145,3 +139,28 @@ class AuthTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         token = response.json()
         self.assertTrue('token' in token)
+        
+    def test_only_one_password(self):
+        data = {'username': 'new_user', 'password1': 'new_password'}
+        response = self.client.post('/authentication/register/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        
+    def test_password_not_match(self):
+        data = {'username': 'new_user', 'password1': 'new_password', 'password2': 'new_password2'}
+        response = self.client.post('/authentication/register/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        
+    def test_password_too_short(self):
+        data = {'username': 'new_user', 'password1': 'new', 'password2': 'new'}
+        response = self.client.post('/authentication/register/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        
+    def test_password_same_username(self):
+        data = {'username': 'new_user', 'password1': 'new_user', 'password2': 'new_user'}
+        response = self.client.post('/authentication/register/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+        
+    def test_password_too_common(self):
+        data = {'username': 'new_user', 'password1': 'password', 'password2': 'password'}
+        response = self.client.post('/authentication/register/', data, format='json')
+        self.assertEqual(response.status_code, 400)

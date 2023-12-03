@@ -5,7 +5,6 @@ from base.tests import BaseTestCase
 import time
 
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
@@ -30,7 +29,7 @@ class AdminTestCase(StaticLiveServerTestCase):
 
         self.base.tearDown()
 
-    """def test_simpleCorrectLogin(self):
+    def test_simpleCorrectLogin(self):
         # Abre la ruta del navegador
         self.driver.get(f"{self.live_server_url}/admin/")
         # Busca los elementos y “escribe”
@@ -38,9 +37,9 @@ class AdminTestCase(StaticLiveServerTestCase):
         self.driver.find_element(By.ID, "id_password").send_keys("qwerty", Keys.ENTER)
 
         # Verifica que nos hemos logado porque aparece la barra de herramientas superior
-        self.assertTrue(len(self.driver.find_elements(By.ID, "user-tools")) == 1)"""
+        self.assertTrue(len(self.driver.find_elements(By.ID, "user-tools")) == 1)
 
-    """def test_simpleWrongLogin(self):
+    def test_simpleWrongLogin(self):
         self.driver.get(f"{self.live_server_url}/admin/")
         self.driver.find_element(By.ID, "id_username").send_keys("WRONG")
         self.driver.find_element(By.ID, "id_password").send_keys("WRONG")
@@ -48,8 +47,8 @@ class AdminTestCase(StaticLiveServerTestCase):
 
         # Si no, aparece este error
         self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME, "errornote")) == 1)
-        time.sleep(5)"""
-
+        time.sleep(5)
+    
 
 class GoogleLoginTestCase(StaticLiveServerTestCase):
     def setUp(self):
@@ -66,14 +65,3 @@ class GoogleLoginTestCase(StaticLiveServerTestCase):
         super().tearDown()
         self.driver.quit()
         self.base.tearDown()
-
-    """def test_google_login(self):
-        self.driver.get(f"{self.live_server_url}/authentication/sigin/")
-        self.driver.set_window_size(1920, 1043)
-
-        google_login_button = self.driver.find_element(
-            By.LINK_TEXT, "Login with Google"
-        )
-        google_login_button.click()
-
-        self.driver.find_element(By.CSS_SELECTOR, "button").click()"""
