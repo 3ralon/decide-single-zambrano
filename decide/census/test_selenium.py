@@ -12,7 +12,7 @@ from base.models import Auth
 from voting.models import Question, Voting, QuestionOption
 from django.conf import settings
 from base.tests import BaseTestCase
-from selenium.webdriver.chrome.options import Options
+
 class CSVExportTest(StaticLiveServerTestCase):
 
     def create_voting(self):
@@ -72,7 +72,6 @@ class CSVExportTest(StaticLiveServerTestCase):
 
         super().setUp()
         
-
     def tearDown(self):
         super().tearDown()
         self.driver.quit()
@@ -90,6 +89,7 @@ class CSVExportTest(StaticLiveServerTestCase):
                 return
             time.sleep(1)
         raise TimeoutError(f"The file did not download within {timeout} seconds.")
+    
     #Test para la exportatión de todos los censos
     def test_export_all_csv(self):
         self.driver.get(f"{self.live_server_url}/census/descargar-csv/")  
@@ -122,5 +122,36 @@ class CSVExportTest(StaticLiveServerTestCase):
         self.wait_for_file_to_download(file_path)
 
         self.assertTrue(os.path.exists(file_path))
+        
+    def test_export_specific_census_csv(self):
+        self.driver.get(f"{self.live_server_url}/census/export-voting-to-csv/{self.voting.id}/")
 
+        voting_id_field = self.wait_for_element(By.ID, 'voting_id')
+        voting_id_field.send_keys(self.voting.id)
+
+        submit_button = self.wait_for_element(By.ID, 'submit-specific')
+        submit_button.click()
+
+        file_path = os.path.join(self.download_dir, f'Censo_{self.voting.id}.csv')
+
+        self.wait_for_file_to_download(file_path)
+
+        self.assertTrue(os.path.exists(file_path))
+        
+    def test_access_export_all_census_without_login(self):
+        self.driver.get(f'{self.live_server_url}/admin/logout/')
+
+        self.driver.get(f"{self.live_server_url}/census/export-all-census/")
+
+        page_source = self.driver.page_source
+        self.assertIn("Debes estar logueado para poder descargar el csv", page_source)
+        
+    def test_access_export_csv_without_login(self):
+        self.driver.get(f'{self.live_server_url}/admin/logout/')
+
+        self.driver.get(f"{self.live_server_url}/census/export-to-csv/")
+
+        page_source = self.driver.page_source
+        self.assertIn("Debes estar logueado para poder descargar el csv", page_source)
+        
 
