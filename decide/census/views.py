@@ -25,6 +25,7 @@ import csv
 from .models import Census
 from voting.models import Voting
 from django.views.generic.base import TemplateView
+from django.contrib.auth.decorators import login_required
 
 
 class CensusExportationToCSV(TemplateView):
@@ -37,15 +38,13 @@ class CensusExportationToCSV(TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated is None or request.user.is_authenticated is False:
-            return HttpResponseForbidden('Debes estar logueado para poder descargar el csv')
-        elif not request.user.is_superuser:
-            return HttpResponseForbidden('Solo los superuser pueden descargar los datos del censo')
+        if not request.user.is_superuser or not request.user.is_staff:
+            return HttpResponseForbidden('Solo los superuser o staff pueden descargar los datos del censo')
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        if not request.user.is_superuser:
-            return HttpResponseForbidden('Solo los superuser pueden descargar los datos del censo')
+        if not request.user.is_superuser or not request.user.is_staff:
+            return HttpResponseForbidden('Solo los superuser o staff pueden descargar los datos del censo')
         voting_id = request.POST.get('voting_id') or kwargs.get('voting_id')
         filename = f"Censo_{voting_id}.csv" if voting_id else "CensoCompleto.csv"
         census = Census.objects.filter(voting_id=voting_id) if voting_id else Census.objects.all()
