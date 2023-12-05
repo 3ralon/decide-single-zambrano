@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from django.views.generic import TemplateView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from census.models import Census
 
@@ -45,7 +45,7 @@ class QuestionView(generics.ListCreateAPIView):
                 opt.save()
         return Response({}, status=status.HTTP_201_CREATED)
     
-class QuestionList(APIView):
+class QuestionList(TemplateView):
     permission_classes = [IsAdminUser]
     def get(self, request):
         if request.user.is_staff:
@@ -54,7 +54,7 @@ class QuestionList(APIView):
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
     
-class QuestionCreation(APIView):
+class QuestionCreation(TemplateView):
     permission_classes = [IsAdminUser]
     def get(self, request):
         if request.user.is_staff:
@@ -85,7 +85,7 @@ class QuestionCreation(APIView):
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
         
-class QuestionDelete(APIView):
+class QuestionDelete(TemplateView):
     permission_classes = [IsAdminUser]
     def post(self, request, question_id):
         if request.user.is_staff:
@@ -135,7 +135,7 @@ class VotingView(generics.ListCreateAPIView):
         voting.auths.add(auth)
         return Response({}, status=status.HTTP_201_CREATED)
     
-class VotingList(APIView):
+class VotingList(TemplateView):
     permission_classes = [IsAdminUser]
     def get(self, request):
         if request.user.is_staff:
@@ -167,8 +167,7 @@ class VotingList(APIView):
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
             
-class VotingTally(APIView): 
-    #CHECK IF AUTH WORKS
+class VotingTally(TemplateView): 
     permission_classes = [IsAdminUser]
     def get(self, request, voting_id):
         if request.user.is_staff:
@@ -181,7 +180,7 @@ class VotingTally(APIView):
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
         
-class VotingCreation(APIView):
+class VotingCreation(TemplateView):
     permission_classes = [IsAdminUser]
     def get(self, request):
         if request.user.is_staff:
@@ -200,7 +199,7 @@ class VotingCreation(APIView):
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
         
-class VotingDelete(APIView):
+class VotingDelete(TemplateView):
     permission_classes = [IsAdminUser]
     def post(self, request, voting_id):
         if request.user.is_staff:
@@ -210,7 +209,7 @@ class VotingDelete(APIView):
         else:
             return Response({}, status=status.HTTP_403_FORBIDDEN)
     
-class CensusVoting(APIView):
+class CensusVoting(TemplateView):
     permission_classes = [IsAdminUser]
     def get(self, request, voting_id):
         if request.user.is_staff:
