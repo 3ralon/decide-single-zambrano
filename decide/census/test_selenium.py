@@ -13,6 +13,7 @@ from voting.models import Question, Voting, QuestionOption
 from django.conf import settings
 from base.tests import BaseTestCase
 
+
 class CSVExportTest(StaticLiveServerTestCase):
 
     def create_voting(self):
@@ -71,7 +72,7 @@ class CSVExportTest(StaticLiveServerTestCase):
         self.assertIsNotNone(self.voting.id)  # Ensure the voting was created
 
         super().setUp()
-        
+
     def tearDown(self):
         super().tearDown()
         self.driver.quit()
@@ -144,7 +145,7 @@ class CSVExportTest(StaticLiveServerTestCase):
         self.driver.get(f"{self.live_server_url}/census/export-all-census/")
 
         page_source = self.driver.page_source
-        self.assertIn("Debes estar logueado para poder descargar el csv", page_source)
+        self.assertIn("Solo los superuser o staff pueden descargar los datos del censo", page_source)
         
     def test_access_export_csv_without_login(self):
         self.driver.get(f'{self.live_server_url}/admin/logout/')
@@ -152,6 +153,6 @@ class CSVExportTest(StaticLiveServerTestCase):
         self.driver.get(f"{self.live_server_url}/census/export-to-csv/")
 
         page_source = self.driver.page_source
-        self.assertIn("Debes estar logueado para poder descargar el csv", page_source)
+        self.assertIn("Solo los superuser o staff pueden descargar los datos del censo", page_source)
         
 
