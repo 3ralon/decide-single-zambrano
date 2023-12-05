@@ -1,22 +1,67 @@
+from typing import Any
 from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.status import (
+        HTTP_200_OK as ST_200,
         HTTP_201_CREATED as ST_201,
         HTTP_204_NO_CONTENT as ST_204,
         HTTP_400_BAD_REQUEST as ST_400,
         HTTP_401_UNAUTHORIZED as ST_401,
-        HTTP_409_CONFLICT as ST_409
-)
-
+        HTTP_403_FORBIDDEN as ST_403,
+        HTTP_409_CONFLICT as ST_409)
+import csv
+from django.views import View
 from base.perms import UserIsStaff
 from .models import Census
+from django.http import HttpResponse, HttpResponseForbidden
+from django.contrib.auth.decorators import user_passes_test
+from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse
+import csv
+from .models import Census
+from voting.models import Voting
+from django.views.generic.base import TemplateView
+from django.contrib.auth.decorators import login_required
+
+
+class CensusExportationToCSV(TemplateView):
+    template_name = "export_csv.html"
+
+    def get_context_data(self, **kwargs: Any):
+        votaciones = Voting.objects.all().count()
+        context = super().get_context_data(**kwargs)
+        context['votaciones'] = votaciones
+        return context
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_superuser or not request.user.is_staff:
+            return HttpResponseForbidden('Solo los superuser o staff pueden descargar los datos del censo')
+        return super().get(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_superuser or not request.user.is_staff:
+            return HttpResponseForbidden('Solo los superuser o staff pueden descargar los datos del censo')
+        voting_id = request.POST.get('voting_id') or kwargs.get('voting_id')
+        filename = f"Censo_{voting_id}.csv" if voting_id else "CensoCompleto.csv"
+        census = Census.objects.filter(voting_id=voting_id) if voting_id else Census.objects.all()
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        writer = csv.writer(response)
+        writer.writerow(['Voting', 'Voter'])
+        for profile in census:
+            writer.writerow([profile.voting_id, profile.voter_id])
+        return response
+    
 
 
 class CensusCreate(generics.ListCreateAPIView):
+    
     permission_classes = (UserIsStaff,)
-
+    
     def create(self, request, *args, **kwargs):
         voting_id = request.data.get('voting_id')
         voters = request.data.get('voters')

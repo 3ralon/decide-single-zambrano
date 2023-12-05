@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container mx-auto px-4">
+    <h1 class="text-4xl font-bold text-center my-8">Bienvenido a Decide</h1>
+    <p class="text-xl text-center mb-8">Aquí tiene las votaciones abiertas:</p>
+    <ul>
+      {% for votation in votations %}
+        {% if not votation.tally and votation.start_date and not votation.end_date%}
+          <li class="mb-4 p-4 border rounded shadow">
+            <h2 class="text-2xl font-bold">{{ votation.name }}</h2>
+            <p class="mt-2">{{ votation.desc }}</p>
+            <a href="{% url 'booth_vote' votation.id %}" class="inline-block mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Vota ahora</a>
+          </li>
+        {% endif %}
+      {% empty %}
+        <li class="mb-4 p-4 border rounded shadow">No hay votaciones abiertas en estos momentos.</li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endblock %}

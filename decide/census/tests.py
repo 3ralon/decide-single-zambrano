@@ -14,6 +14,9 @@ from .models import Census
 from base import mods
 from base.tests import BaseTestCase
 from datetime import datetime
+from django.urls import reverse
+from django.test import RequestFactory
+from census.views import CensusExportationToCSV
 
 
 class CensusTestCase(BaseTestCase):
@@ -81,7 +84,85 @@ class CensusTestCase(BaseTestCase):
         response = self.client.delete('/census/{}/'.format(1), data, format='json')
         self.assertEqual(response.status_code, 204)
         self.assertEqual(0, Census.objects.count())
+        
+        
+class CensusExportationTests(BaseTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        super().setUp()
 
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_unauthenticated_export_to_csv(self):
+        response = self.client.get(reverse('export_page'))
+        self.assertEqual(response.status_code, 403)  
+        response = self.client.post(reverse('export_page'))
+        self.assertEqual(response.status_code, 403) 
+
+    def test_get_export_to_csv(self):
+        #Para un usuario que no es superuser
+        user = User.objects.create_user('testuser', 'testuser')
+        request = self.factory.get('census/descargar-csv/')
+        request.user = user
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 403)  
+        #Para un usuario que sí es superuser
+        user = User.objects.create_superuser('testadmin', 'admin@example.com', 'testadmin')
+        request = self.factory.get('census/descargar-csv/')
+        request.user = user
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 200)  
+        
+    def test_post_descargar_csv(self):
+        #Para un usuario que no es superuser
+        user = User.objects.create_user('testuser', 'testuser')
+        request = self.factory.post('census/descargar-csv/')
+        request.user = user
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 403)  
+        #Para un usuario que sí es superuser
+        user = User.objects.create_superuser('testadmin', 'admin@example.com', 'testadmin')
+        request = self.factory.post('census/descargar-csv/')
+        request.user = user
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 200)  
+
+    def test_post_request_superuser_export_one_csv(self):
+        #Para un usuario que sí es staff ni superuser
+        user = User.objects.create_superuser('testadmin', 'admin@example.com', 'testadmin')
+        request = self.factory.post('census/export-to-csv/', {'voting_id': 1})
+        request.user = user
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 200) 
+        self.assertEqual(response['Content-Type'], 'text/csv') 
+
+    def test_post_request_unauthorized_export_one_csv(self):
+        #Para un usuario que no es staff ni superuser
+        user = User.objects.create_user('testuser', 'testuser')
+        request = self.factory.post('census/export-to-csv/', {'voting_id': 1})
+        request.user = user          
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 403)  
+
+    def test_post_request_superuser_export_all(self):
+        #Para un usuario que sí es staff ni superuser
+        user = User.objects.create_superuser('testadmin', 'admin@example.com', 'testadmin')
+        request = self.factory.post('census/export-all-census/')
+        request.user = user
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 200) 
+        self.assertEqual(response['Content-Type'], 'text/csv') 
+
+    def test_post_request_unauthorized_export_all(self):
+        #Para un usuario que no es staff ni superuser
+        user = User.objects.create_user('testuser', 'testuser')
+        request = self.factory.post('census/export-all-census/')
+        request.user = user          
+        response = CensusExportationToCSV.as_view()(request)
+        self.assertEqual(response.status_code, 403) 
+    
+    
 
 class CensusTest(StaticLiveServerTestCase):
     def setUp(self):

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: rgb(208,232,242);
+            margin: 0; /* Remove default margin */
+        }
+        .form-container {
+            width: 450px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #register-title {
+            font-family: 'Franklin Gothic Medium';
+            color: midnightblue; 
+            font-size: 24px; 
+            text-align: center;
+            margin-top: 30px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            justify-content: center; 
+            align-items: center; 
+            margin-top: 30px; 
+        }
+        input {
+            width: 100%; /* Make input fields take the full width */
+            padding: 10px;
+            font-size: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%; /* Make button take the full width */
+            padding: 10px;
+            font-size: 20px;
+            border-radius: 5px;
+            border: none;
+            color: #fff;
+            background-color: #297ad1;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2 id="login-title">Log In</h2>
+        {% if user.is_authenticated %}
+        <p>You are already logged in as {{user.username}}</p>
+        {% endif %}
+        <form method="POST" class="form-group" action="">
+            {% csrf_token %}
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" placeholder="Username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <label for="remember_me">Remember me:</label>
+            <input type="checkbox" id="remember_me" name="remember_me">
+            <input type="submit" value="Log In">
+        </form>
+
+        {% load socialaccount %}
+
+            <div class="form-group">
+                <h2>Google Login</h2>
+                    <a href="{% provider_login_url 'google' %}">Login with Google</a>
+            </div>
+
+    </div>
+</body>
+</html>
+
