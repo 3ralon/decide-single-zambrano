@@ -11,24 +11,11 @@ from rest_framework.permissions import IsAdminUser
 from census.models import Census
 
 from voting.forms import CensusForm, QuestionForm, QuestionOptionFormSet, VotingForm
-from django.http import HttpResponseRedirect
-from django.urls import reverse
-import django_filters.rest_framework
-from django.conf import settings
-from django.utils import timezone
-from django.shortcuts import get_object_or_404, redirect, render
-from rest_framework import generics, status
-from rest_framework.response import Response
-from django.views.generic import TemplateView
-from rest_framework.permissions import IsAdminUser
-from census.models import Census
-
-from voting.forms import CensusForm, QuestionForm, QuestionOptionFormSet, VotingForm
-
-from .models import Question, QuestionOption, Voting
+from .models import Question, QuestionOption
 from .serializers import SimpleVotingSerializer, VotingSerializer, QuestionSerializer
 from base.perms import UserIsStaff
 from base.models import Auth
+from voting.models import Voting
 
 class QuestionView(generics.ListCreateAPIView):
     queryset = Question.objects.all()
