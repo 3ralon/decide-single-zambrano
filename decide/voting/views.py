@@ -1,4 +1,4 @@
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 import django_filters.rest_framework
 from django.conf import settings
@@ -6,15 +6,16 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404, redirect, render
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from django.views.generic import TemplateView
+from rest_framework.permissions import IsAdminUser
+from census.models import Census
 
-from voting.forms import QuestionForm, QuestionOptionFormSet, VotingForm
-
-from .models import Question, QuestionOption, Voting
+from voting.forms import CensusForm, QuestionForm, QuestionOptionFormSet, VotingForm
+from .models import Question, QuestionOption
 from .serializers import SimpleVotingSerializer, VotingSerializer, QuestionSerializer
 from base.perms import UserIsStaff
 from base.models import Auth
-
+from voting.models import Voting
 
 class QuestionView(generics.ListCreateAPIView):
     queryset = Question.objects.all()
@@ -43,25 +44,27 @@ class QuestionView(generics.ListCreateAPIView):
                 opt.save()
         return Response({}, status=status.HTTP_201_CREATED)
     
-class QuestionList(APIView):
+class QuestionList(TemplateView):
+    permission_classes = [IsAdminUser]
     def get(self, request):
-        #if self.request.user.is_staff:
+        if request.user.is_staff:
             questions = Question.objects.all()
             return render(request, 'question_list.html', {'questions': questions})
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
     
-class QuestionCreation(APIView):
+class QuestionCreation(TemplateView):
+    permission_classes = [IsAdminUser]
     def get(self, request):
-        #if request.user.is_staff:
+        if request.user.is_staff:
             form = QuestionForm()
             formset = QuestionOptionFormSet(prefix='options', queryset=QuestionOption.objects.none())
             return render(request, 'question_creation.html', {'form': form, 'formset': formset})
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
         
     def post(self, request):
-        #if request.user.is_staff:
+        if request.user.is_staff:
             form = QuestionForm(request.POST)
             formset = QuestionOptionFormSet(request.POST, prefix='options')
             if form.is_valid() and formset.is_valid():
@@ -78,8 +81,19 @@ class QuestionCreation(APIView):
                         option.number = options.index(option) + 1
                         option.save()
                 return redirect('question_list')
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+        
+class QuestionDelete(TemplateView):
+
+    permission_classes = [IsAdminUser]
+    def post(self, request, question_id):
+        if request.user.is_staff:
+            question = get_object_or_404(Question, pk=question_id)
+            question.delete()
+            return redirect('question_list')
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
 
 
 class VotingView(generics.ListCreateAPIView):
@@ -121,16 +135,17 @@ class VotingView(generics.ListCreateAPIView):
         voting.auths.add(auth)
         return Response({}, status=status.HTTP_201_CREATED)
     
-class VotingList(APIView):
+class VotingList(TemplateView):
+    permission_classes = [IsAdminUser]
     def get(self, request):
-        #if request.user.is_staff:
+        if request.user.is_staff:
             votings = Voting.objects.all()
             return render(request, 'voting_list.html', {'votings': votings})
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
     
     def start_voting(self, voting_id):
-        #if self.user.is_staff:
+        if self.user.is_staff:
             voting = get_object_or_404(Voting, pk=voting_id)
             if(voting.start_date):
                 return HttpResponseRedirect(reverse('voting_list'))
@@ -138,50 +153,83 @@ class VotingList(APIView):
             voting.start_date = timezone.now()
             voting.save()
             return redirect('voting_list')
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
             
     def stop_voting(self, voting_id):
-        #if self.user.is_staff:
+        if self.user.is_staff:
             voting = get_object_or_404(Voting, pk=voting_id)
             if(voting.end_date or not voting.start_date):
                 return HttpResponseRedirect(reverse('voting_list'))
             voting.end_date = timezone.now()
             voting.save()
             return redirect('voting_list')
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
             
-class VotingTally(APIView): 
-    #CHECK IF AUTH WORKS
+class VotingTally(TemplateView): 
+    permission_classes = [IsAdminUser]
     def get(self, request, voting_id):
-        #if self.user.is_staff:
+        if request.user.is_staff:
             voting = get_object_or_404(Voting, pk=voting_id)
             if(voting.tally or not voting.end_date or not voting.start_date):
                 return HttpResponseRedirect(reverse('voting_list'))
             token = request.session.get('auth-token', '')
             voting.tally_votes(token)
             return redirect('voting_list')
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
         
-class VotingCreation(APIView):
+class VotingCreation(TemplateView):
+    permission_classes = [IsAdminUser]
     def get(self, request):
-        #if request.user.is_staff:
+        if request.user.is_staff:
             form = VotingForm()
             return render(request, 'voting_creation.html', {'form': form})
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
 
     def post(self, request):
-        #if self.request.user.is_staff:
+        if self.request.user.is_staff:
             form = VotingForm(request.POST)
             if form.is_valid():
                 form.save()
                 return redirect('voting_list')
             return render(request, 'voting_creation.html', {'form': form})
-        #else:
-            #return Response({}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+        
+class VotingDelete(TemplateView):
+    permission_classes = [IsAdminUser]
+    def post(self, request, voting_id):
+        if request.user.is_staff:
+            voting = get_object_or_404(Voting, pk=voting_id)
+            voting.delete()
+            return redirect('voting_list')
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+    
+class CensusVoting(TemplateView):
+    permission_classes = [IsAdminUser]
+    def get(self, request, voting_id):
+        if request.user.is_staff:
+            form = CensusForm()
+            return render(request, 'census_voting.html', {'form': form})
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+
+    def post(self, request, voting_id):
+        if self.request.user.is_staff:
+            form = CensusForm(request.POST)
+            if form.is_valid():
+                users = form.cleaned_data['user']
+                for user in users:
+                    census = Census(voting_id=voting_id, voter_id=user.id)
+                    census.save()
+                return redirect('voting_list')
+            return render(request, 'census_voting.html', {'form': form})
+        else:
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
 
 
 class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):

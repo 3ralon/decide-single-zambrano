@@ -13,13 +13,23 @@
 
     <body>
         <nav class="py-6 px-6 flex justify-between items-center border-b border-gray-200">
-            <a href="/" class = "text-2xl font-bold">Decide</a>      
-            
+            <a href="/" class = "text-2xl font-bold">Decide</a>
+            {% if request.user.is_authenticated %}
+                <a class = "text-2xl font-bold">{{ request.user.username }}</a>
+            {% endif %}    
             <div class="space-x-6">
                 {% if request.user.is_staff %}
                     <a href="{% url 'question_list' %}" class="text-gray-600 font-semibold hover:text-gray-900">Preguntas</a>
                     <a href="{% url 'voting_list' %}" class="text-gray-600 font-semibold hover:text-gray-900">Votaciones</a>
                 {% endif %}
+                {% if not request.user.is_authenticated %}
+                    <a href="{% url 'signin' %}" class="text-blue-600 font-semibold hover:text-gray-900">Iniciar sesión</a>
+                    <a href="{% url 'register' %}" class="text-blue-600 font-semibold hover:text-gray-900">Registrarse</a>
+                {% endif %}
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'logout' %}" class="text-blue-600 font-semibold hover:text-gray-900">Cerrar sesión</a>
+                {% endif %}
+
                 <a href="{% url 'home' %}" class="text-gray-600 font-semibold hover:text-gray-900">Home</a>
             </div>
         </nav>

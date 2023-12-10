@@ -282,12 +282,15 @@
                 decideSend(evt) {
                     evt.preventDefault();
                     try {
-                        if (!this.processRanking(this.selectedRanking.toString())) {
-                            throw new Error('you must select one position for each option.');
+                        if (voting.question.question_type != 'RANKING' && !this.selected) {
+                            throw new Error('debes seleccionar una opción.');
+                        }
+                        if (voting.question.question_type == 'RANKING' && !this.processRanking(this.selectedRanking.toString())) {
+                            throw new Error('debes seleccionar una posición para cada opción.');
                         }
                     } catch (error) {
                         this.successVote = false
-                        this.showAlert("danger", '{% trans "Error: " %}' + error);
+                        this.showAlert("danger", '{% trans "" %}' + error);
                         return null;
                     }
                     var v = this.decideEncrypt();
@@ -301,7 +304,7 @@
                         .then(data => {
                             this.successVote = true;
                             this.alertShow = false;
-                            this.showAlert("success", '{% trans "Congratulations. Your vote has been sent" %}');
+                            this.showAlert("success", '{% trans "Felicidades, tu voto ha sido enviado" %}');
                         })
                         .catch(error => {
                             this.succesVote = false;

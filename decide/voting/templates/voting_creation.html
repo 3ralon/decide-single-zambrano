@@ -23,6 +23,10 @@
             <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ form.question.id_for_label }}">Pregunta</label>
             {{ form.question }}
         </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ form.auths.id_for_label }}">Auths</label>
+            {{ form.auths }}
+        </div>
         <div class="flex items-center justify-between">
             <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="submit">
                 Crear Votación
