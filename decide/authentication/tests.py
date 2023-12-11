@@ -5,6 +5,9 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 from base import mods
+from django.test import TestCase
+from django.urls import reverse
+from rest_framework import status
 
 
 class AuthTestCase(APITestCase):
@@ -143,7 +146,8 @@ class AuthTestCase(APITestCase):
     def test_only_one_password(self):
         data = {'username': 'new_user', 'password1': 'new_password'}
         response = self.client.post('/authentication/register/', data, format='json')
-        self.assertEqual(response.status_code, 400)
+        #self.assertEqual(response.status_code, 400)
+        self.assertIn('password2', response.json['error'])
         
     def test_password_not_match(self):
         data = {'username': 'new_user', 'password1': 'new_password', 'password2': 'new_password2'}

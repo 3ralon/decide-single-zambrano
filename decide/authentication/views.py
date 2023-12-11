@@ -11,6 +11,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.shortcuts import redirect, render
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login,logout
@@ -129,7 +130,13 @@ class RegisterView(APIView):
                 response['Content-Type'] = 'application/json'
                 return response
             else:
-                return Response(form.errors, status=HTTP_400_BAD_REQUEST)
+                # Recuperar mensajes de error del formulario y agregarlos a los mensajes de Django
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field.capitalize()}: {error}")
+                        
+                # Redirigir a la página de registro con los mensajes de error
+                return redirect('register')
 
         # Si es un superusuario, manejar el registro del administrador
         if is_superuser:

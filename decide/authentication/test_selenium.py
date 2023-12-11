@@ -10,25 +10,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from django.contrib.auth.models import User
-from selenium.webdriver.support.ui import WebDriverWait
-from django.contrib.sites.models import Site
-from django.contrib.sites.models import Site
-from django.contrib.sites.shortcuts import get_current_site
-from allauth.socialaccount.models import SocialApp
-from django.db import models
-from django.contrib.sites.models import Site
-from allauth.socialaccount.models import SocialApp
+from selenium.common.exceptions import NoSuchElementException
 
 
 class AdminTestCase(StaticLiveServerTestCase):
+    
     def setUp(self):
-        # Crea un usuario admin y otro no admin
         self.base = BaseTestCase()
         self.base.setUp()
 
         # Opciones de Chrome
         options = webdriver.ChromeOptions()
-        options.headless = False
+        options.headless = True
         self.driver = webdriver.Chrome(options=options)
 
         super().setUp()
@@ -65,37 +58,22 @@ class RegistrationTestCase(StaticLiveServerTestCase):
         self.base = BaseTestCase()
         self.base.setUp()
 
+        # Opciones de Chrome
         options = webdriver.ChromeOptions()
         options.headless = False
-        options.add_argument("--no-sandbox")
         self.driver = webdriver.Chrome(options=options)
-        self.user = User.objects.create_user(username="testuser", password="testpass")
 
-        current_site = get_current_site(self.driver)
-        print(current_site)
-        
-        app = SocialApp.objects.create(
-            provider="Google",
-            name="google",
-            client_id="test",
-            secret="test",
-        )
-        app.sites.add(current_site)
-        
         super().setUp()
-        
+
     def tearDown(self):
         super().tearDown()
         self.driver.quit()
-        self.base.tearDown()
-        
 
+        self.base.tearDown()
 
     def test_simpleCorrectRegistration(self):
         
-        self.driver.get("http://localhost:8000/authentication/register/")
-        #self.driver.get(f"{self.live_server_url}/authentication/register/")
-        time.sleep(10)
+        self.driver.get(f"{self.live_server_url}/authentication/register/")
         username_input = self.driver.find_element(By.ID, "id_username")
         username_input.send_keys("testuser")
         password_input = self.driver.find_element(By.ID, "id_password1")
@@ -103,29 +81,74 @@ class RegistrationTestCase(StaticLiveServerTestCase):
         password_confirm_input = self.driver.find_element(By.ID, "id_password2")
         password_confirm_input.send_keys("D0z29'RM<I4m")
 
-        # Submit the form
-        time.sleep(10)
+        # enviar el formulario
         self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        # Check if a new user was created with the correct username and password
+        # Comprobar que se ha creado el usuario
         self.assertEqual(User.objects.count(), 3)
         user = User.objects.get(username="testuser")
         self.assertTrue(user.check_password("D0z29'RM<I4m"))
+
+    def test_weakPasswordRegistration(self):
+        self.driver.get(f"{self.live_server_url}/authentication/register/")
+
+        username_input = self.driver.find_element(By.ID, "id_username")
+        username_input.send_keys("weakpassworduser")
+        password_input = self.driver.find_element(By.ID, "id_password1")
+        password_input.send_keys("weak")
+        password_confirm_input = self.driver.find_element(By.ID, "id_password2")
+        password_confirm_input.send_keys("weak")
+
+        # enviar el formulario
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
+        # Comprobar que se muestra un mensaje de error de contraseña débil
+        self.assertTrue("This password is too short. It must contain at least 8 characters" in self.driver.page_source)
+
+    def test_passwordMismatchRegistration(self):
+        self.driver.get(f"{self.live_server_url}/authentication/register/")
+        username_input = self.driver.find_element(By.ID, "id_username")
+        username_input.send_keys("mismatchuser")
+        password_input = self.driver.find_element(By.ID, "id_password1")
+        password_input.send_keys("Mismatch123!")
+        password_confirm_input = self.driver.find_element(By.ID, "id_password2")
+        password_confirm_input.send_keys("Mismatch456!")
+
+        # enviar el formulario
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
+        # Comprobar que se muestra un mensaje de error de coincidencia de contraseña
+        self.assertTrue("The two password fields didn’t match" in self.driver.page_source)
         
-    
+    def test_userAlreadyExists(self):
+        self.driver.get(f"{self.live_server_url}/authentication/register/")
+        username_input = self.driver.find_element(By.ID, "id_username")
+        username_input.send_keys("admin")
+        password_input = self.driver.find_element(By.ID, "id_password1")
+        password_input.send_keys("D0z29'RM<I4m")
+        password_confirm_input = self.driver.find_element(By.ID, "id_password2")
+        password_confirm_input.send_keys("D0z29'RM<I4m")
 
-class GoogleLoginTestCase(StaticLiveServerTestCase):
-    def setUp(self):
-        self.base = BaseTestCase()
-        self.base.setUp()
+        # enviar el formulario
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-        options = webdriver.ChromeOptions()
-        options.headless = True
-        self.driver = webdriver.Chrome(options=options)
+        # Comprobar que se muestra un mensaje de error de coincidencia de contraseña
+        self.assertTrue("A user with that username already exists" in self.driver.page_source)
+        
+    def test_blankFieldRegistration(self):
+        self.driver.get(f"{self.live_server_url}/authentication/register/")
 
-        super().setUp()
+        # Dejamos el nombre de usuario en blanco
+        password_input = self.driver.find_element(By.ID, "id_password1")
+        password_input.send_keys("Password123!")
+        password_confirm_input = self.driver.find_element(By.ID, "id_password2")
+        password_confirm_input.send_keys("Password123!")
 
-    def tearDown(self):
-        super().tearDown()
-        self.driver.quit()
-        self.base.tearDown()
+        # enviar el formulario
+        self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
+
+        # Comprobamos que sigue el formulario de registro
+        self.assertTrue("Register" in self.driver.page_source)
+        self.assertTrue("id_username" in self.driver.page_source)
+        self.assertTrue("id_password1" in self.driver.page_source)
+        self.assertTrue("id_password2" in self.driver.page_source)
