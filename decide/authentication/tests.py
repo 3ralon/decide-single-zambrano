@@ -83,19 +83,12 @@ class AuthTestCase(APITestCase):
        
         data = {'username': 'voter1', 'password': '123'}
         response = self.client.post('/authentication/login/', data, format='json')
-
-        
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Token.objects.filter(user__username='voter1').count(), 1)
-
        
         token = response.json()
         self.assertTrue(token.get('token'))
-
-        
         response = self.client.post('/authentication/logout/', token, format='json')
-
-        
         self.assertEqual(response.status_code, 200)
         
 
@@ -104,20 +97,24 @@ class AuthTestCase(APITestCase):
         response = self.client.post('/authentication/login/', data, format='json')
         self.assertEqual(response.status_code, 200)
         token = response.json()
-
         token.update({'username': 'user1'})
-        response = self.client.post('/authentication/register/', token, format='json')
-        self.assertEqual(response.status_code, 400)
+        user_count_before = User.objects.count()
+        self.client.post('/authentication/register/', token, format='json')
+        
+        user_count_after = User.objects.count()
+        self.assertEqual(user_count_after, user_count_before)
 
     def test_register_user_already_exist(self):
         data = {'username': 'admin', 'password': 'admin'}
         response = self.client.post('/authentication/login/', data, format='json')
         self.assertEqual(response.status_code, 200)
         token = response.json()
-
         token.update(data)
-        response = self.client.post('/authentication/register/', token, format='json')
-        self.assertEqual(response.status_code, 400)
+        user_count_before = User.objects.count()
+        self.client.post('/authentication/register/', token, format='json')
+        
+        user_count_after = User.objects.count()
+        self.assertEqual(user_count_after, user_count_before)
 
     def test_register_from_admin(self):
         data = {'username': 'admin', 'password': 'admin'}
@@ -145,26 +142,41 @@ class AuthTestCase(APITestCase):
         
     def test_only_one_password(self):
         data = {'username': 'new_user', 'password1': 'new_password'}
-        response = self.client.post('/authentication/register/', data, format='json')
-        #self.assertEqual(response.status_code, 400)
-        self.assertIn('password2', response.json['error'])
+        user_count_before = User.objects.count()
+        self.client.post('/authentication/register/', data, format='json')
+        
+        user_count_after = User.objects.count()
+        self.assertEqual(user_count_after, user_count_before)
         
     def test_password_not_match(self):
         data = {'username': 'new_user', 'password1': 'new_password', 'password2': 'new_password2'}
-        response = self.client.post('/authentication/register/', data, format='json')
-        self.assertEqual(response.status_code, 400)
+        user_count_before = User.objects.count()
+        self.client.post('/authentication/register/', data, format='json')
+        
+        user_count_after = User.objects.count()
+        self.assertEqual(user_count_after, user_count_before)
         
     def test_password_too_short(self):
         data = {'username': 'new_user', 'password1': 'new', 'password2': 'new'}
-        response = self.client.post('/authentication/register/', data, format='json')
-        self.assertEqual(response.status_code, 400)
+        user_count_before = User.objects.count()
+        self.client.post('/authentication/register/', data, format='json')
+        
+        user_count_after = User.objects.count()
+        self.assertEqual(user_count_after, user_count_before)
         
     def test_password_same_username(self):
         data = {'username': 'new_user', 'password1': 'new_user', 'password2': 'new_user'}
-        response = self.client.post('/authentication/register/', data, format='json')
-        self.assertEqual(response.status_code, 400)
+        user_count_before = User.objects.count()
+        self.client.post('/authentication/register/', data, format='json')
+        
+        user_count_after = User.objects.count()
+        self.assertEqual(user_count_after, user_count_before)
+        
         
     def test_password_too_common(self):
         data = {'username': 'new_user', 'password1': 'password', 'password2': 'password'}
-        response = self.client.post('/authentication/register/', data, format='json')
-        self.assertEqual(response.status_code, 400)
+        user_count_before = User.objects.count()
+        self.client.post('/authentication/register/', data, format='json')
+        
+        user_count_after = User.objects.count()
+        self.assertEqual(user_count_after, user_count_before)

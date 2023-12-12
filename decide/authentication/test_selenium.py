@@ -60,7 +60,7 @@ class RegistrationTestCase(StaticLiveServerTestCase):
 
         # Opciones de Chrome
         options = webdriver.ChromeOptions()
-        options.headless = False
+        options.headless = True
         self.driver = webdriver.Chrome(options=options)
 
         super().setUp()
