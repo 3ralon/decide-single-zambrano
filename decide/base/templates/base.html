@@ -4,6 +4,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
 
         <script src="https://cdn.tailwindcss.com"></script>
 
@@ -21,6 +22,7 @@
                 {% if request.user.is_staff %}
                     <a href="{% url 'question_list' %}" class="text-gray-600 font-semibold hover:text-gray-900">Preguntas</a>
                     <a href="{% url 'voting_list' %}" class="text-gray-600 font-semibold hover:text-gray-900">Votaciones</a>
+                    <a href="{% url 'export_page' %}" class="text-gray-600 font-semibold hover:text-gray-900">Censo</a>
                 {% endif %}
                 {% if not request.user.is_authenticated %}
                     <a href="{% url 'signin' %}" class="text-blue-600 font-semibold hover:text-gray-900">Iniciar sesión</a>
