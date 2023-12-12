@@ -1,17 +1,12 @@
 from django.test import TestCase
-from django.db import connection
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-
 from base.tests import BaseTestCase
 import time
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from django.contrib.auth.models import User
-from selenium.common.exceptions import NoSuchElementException
-
 
 class AdminTestCase(StaticLiveServerTestCase):
     
