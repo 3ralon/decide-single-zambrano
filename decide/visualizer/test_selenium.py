@@ -10,14 +10,15 @@ from voting.models import Question, Voting, QuestionOption
 
 
 class VisualizerTestCase(StaticLiveServerTestCase):
-    
     def create_votings(self):
         q = Question(desc="Pregunta prueba")
         q.save()
         for i in range(3):
             opt = QuestionOption(question=q, option="opción {}".format(i + 1))
             opt.save()
-        voting_open = Voting(name="Pregunta prueba", question=q, start_date=timezone.now())
+        voting_open = Voting(
+            name="Pregunta prueba", question=q, start_date=timezone.now()
+        )
         voting_open.save()
         voting_closed = Voting(
             name="test voting closed", question=q, start_date=timezone.now()
@@ -38,7 +39,11 @@ class VisualizerTestCase(StaticLiveServerTestCase):
         return voting_open, voting_closed, voting_not_started
 
     def setUp(self):
-        self.voting_open, self.voting_closed, self.voting_not_started = self.create_votings()
+        (
+            self.voting_open,
+            self.voting_closed,
+            self.voting_not_started,
+        ) = self.create_votings()
         # Selenium Setup
         self.base = BaseTestCase()
         self.base.setUp()
@@ -54,20 +59,37 @@ class VisualizerTestCase(StaticLiveServerTestCase):
         self.base.tearDown()
 
     def test_votacion_abierta(self):
-        #Ruta navegador
+        # Ruta navegador
         self.driver.get(f"{self.live_server_url}/visualizer/{self.voting_open.id}")
         self.assertTrue(len(self.driver.find_elements(By.ID, "app-visualizer")) == 1)
-        self.assertTrue(len(self.driver.find_elements(By.XPATH, "//*[contains(text(), 'Votación en curso')]")) == 1)  # Verifica si votación abierta (si esta bierta da 1)
+        self.assertTrue(
+            len(
+                self.driver.find_elements(
+                    By.XPATH, "//*[contains(text(), 'Votación en curso')]"
+                )
+            )
+            == 1
+        )  # Verifica si votación abierta (si esta bierta da 1)
 
     def test_votacion_no_empezada(self):
-        self.driver.get(f"{self.live_server_url}/visualizer/{self.voting_not_started.id}")
+        self.driver.get(
+            f"{self.live_server_url}/visualizer/{self.voting_not_started.id}"
+        )
         self.assertTrue(len(self.driver.find_elements(By.ID, "app-visualizer")) == 1)
-        self.assertTrue(len(self.driver.find_elements(By.XPATH, "//*[contains(text(), 'Votación no comenzada')]")) == 1)  # Verifica q votación no comenzado
-        
+        self.assertTrue(
+            len(
+                self.driver.find_elements(
+                    By.XPATH, "//*[contains(text(), 'Votación no comenzada')]"
+                )
+            )
+            == 1
+        )  # Verifica q votación no comenzado
+
     def test_votacion_cerrada(self):
         self.driver.get(f"{self.live_server_url}/visualizer/{self.voting_closed.id}")
         self.assertTrue(len(self.driver.find_elements(By.ID, "app-visualizer")) == 1)
-        self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME, "chart-container")) == 2)
+        self.assertTrue(
+            len(self.driver.find_elements(By.CLASS_NAME, "chart-container")) == 2
+        )
         self.assertTrue(len(self.driver.find_elements(By.ID, "scoreChart")) == 1)
         self.assertTrue(len(self.driver.find_elements(By.ID, "votesChart")) == 1)
-        

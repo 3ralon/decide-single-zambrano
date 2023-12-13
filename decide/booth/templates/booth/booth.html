@@ -14,7 +14,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-dark bg-primary">
         <div class="container-fluid">
-            <a href="{% url 'home' %}" class="navbar-brand">Decide</a>    
+            <a href="{% url 'home' %}" class="navbar-brand">Decide</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -147,7 +147,7 @@
     </div>
 
 </div>
-    
+
 {% endblock %}
 
 {% block extrabody %}
@@ -274,7 +274,7 @@
                     if (voting.question.question_type == 'RANKING') {
                         bigmsg = BigInt.fromJSONObject(this.selectedRanking.toString());
                     } else {
-                        bigmsg = BigInt.fromJSONObject(this.selected.toString());  
+                        bigmsg = BigInt.fromJSONObject(this.selected.toString());
                     }
                     var cipher = ElGamal.encrypt(this.bigpk, bigmsg);
                     return cipher;

@@ -7,8 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from django.contrib.auth.models import User
 
+
 class AdminTestCase(StaticLiveServerTestCase):
-    
     def setUp(self):
         self.base = BaseTestCase()
         self.base.setUp()
@@ -45,9 +45,9 @@ class AdminTestCase(StaticLiveServerTestCase):
         # Si no, aparece este error
         self.assertTrue(len(self.driver.find_elements(By.CLASS_NAME, "errornote")) == 1)
         time.sleep(5)
-        
+
+
 class RegistrationTestCase(StaticLiveServerTestCase):
-    
     def setUp(self):
         self.base = BaseTestCase()
         self.base.setUp()
@@ -66,7 +66,7 @@ class RegistrationTestCase(StaticLiveServerTestCase):
         self.base.tearDown()
 
     def test_simpleCorrectRegistration(self):
-        
+
         self.driver.get(f"{self.live_server_url}/authentication/register/")
         username_input = self.driver.find_element(By.ID, "id_username")
         username_input.send_keys("testuser")
@@ -97,7 +97,10 @@ class RegistrationTestCase(StaticLiveServerTestCase):
         self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
         # Comprobar que se muestra un mensaje de error de contraseña débil
-        self.assertTrue("This password is too short. It must contain at least 8 characters" in self.driver.page_source)
+        self.assertTrue(
+            "This password is too short. It must contain at least 8 characters"
+            in self.driver.page_source
+        )
 
     def test_passwordMismatchRegistration(self):
         self.driver.get(f"{self.live_server_url}/authentication/register/")
@@ -112,8 +115,10 @@ class RegistrationTestCase(StaticLiveServerTestCase):
         self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
         # Comprobar que se muestra un mensaje de error de coincidencia de contraseña
-        self.assertTrue("The two password fields didn’t match" in self.driver.page_source)
-        
+        self.assertTrue(
+            "The two password fields didn’t match" in self.driver.page_source
+        )
+
     def test_userAlreadyExists(self):
         self.driver.get(f"{self.live_server_url}/authentication/register/")
         username_input = self.driver.find_element(By.ID, "id_username")
@@ -127,8 +132,10 @@ class RegistrationTestCase(StaticLiveServerTestCase):
         self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
         # Comprobar que se muestra un mensaje de error de coincidencia de contraseña
-        self.assertTrue("A user with that username already exists" in self.driver.page_source)
-        
+        self.assertTrue(
+            "A user with that username already exists" in self.driver.page_source
+        )
+
     def test_blankFieldRegistration(self):
         self.driver.get(f"{self.live_server_url}/authentication/register/")
 
