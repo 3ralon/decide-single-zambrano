@@ -44,10 +44,6 @@ class LoginView(TemplateView):
             if user is not None:
                 login(request, user)
 
-                # Iniciar sesión con Google si está asociado
-                social_account = SocialAccount.objects.filter(
-                    user=user, provider="google"
-                ).first()
                 if not remember_me:
                     request.session.set_expiry(0)
 

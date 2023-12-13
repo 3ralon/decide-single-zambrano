@@ -34,7 +34,7 @@ importante a la hora de definir una votación y de controlar quién ha
 votado y quién no.
 
 El censo está relacionado con la autenticación, pero no es lo mismo, el
-censo es la autorización para votar en una votación en concreto, es decir, puede estar autorizado a entrar en el sistema a través de la autenticación, pero puede que no tengas autorización para votar en una determinada votación. 
+censo es la autorización para votar en una votación en concreto, es decir, puede estar autorizado a entrar en el sistema a través de la autenticación, pero puede que no tengas autorización para votar en una determinada votación.
 
 Votaciones
 ----------
@@ -94,4 +94,3 @@ gráficas y tablas.
 
 También se encargará de generar los diferentes informes necesarios de estos
 resultados, ya sea en formato web, pdf, texto planto, etc.
-
