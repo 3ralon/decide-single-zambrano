@@ -51,7 +51,7 @@ class QuestionList(TemplateView):
             questions = Question.objects.all()
             return render(request, 'question_list.html', {'questions': questions})
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
     
 class QuestionCreation(TemplateView):
     permission_classes = [IsAdminUser]
@@ -61,7 +61,7 @@ class QuestionCreation(TemplateView):
             formset = QuestionOptionFormSet(prefix='options', queryset=QuestionOption.objects.none())
             return render(request, 'question_creation.html', {'form': form, 'formset': formset})
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
         
     def post(self, request):
         if request.user.is_staff:
@@ -82,7 +82,7 @@ class QuestionCreation(TemplateView):
                         option.save()
                 return redirect('question_list')
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
         
 class QuestionDelete(TemplateView):
 
@@ -93,7 +93,7 @@ class QuestionDelete(TemplateView):
             question.delete()
             return redirect('question_list')
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
 
 
 class VotingView(generics.ListCreateAPIView):
@@ -142,7 +142,7 @@ class VotingList(TemplateView):
             votings = Voting.objects.all()
             return render(request, 'voting_list.html', {'votings': votings})
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
     
     def start_voting(self, voting_id):
         if self.user.is_staff:
@@ -178,7 +178,7 @@ class VotingTally(TemplateView):
             voting.tally_votes(token)
             return redirect('voting_list')
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
         
 class VotingCreation(TemplateView):
     permission_classes = [IsAdminUser]
@@ -187,7 +187,7 @@ class VotingCreation(TemplateView):
             form = VotingForm()
             return render(request, 'voting_creation.html', {'form': form})
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
 
     def post(self, request):
         if self.request.user.is_staff:
@@ -197,7 +197,7 @@ class VotingCreation(TemplateView):
                 return redirect('voting_list')
             return render(request, 'voting_creation.html', {'form': form})
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
         
 class VotingDelete(TemplateView):
     permission_classes = [IsAdminUser]
@@ -207,7 +207,7 @@ class VotingDelete(TemplateView):
             voting.delete()
             return redirect('voting_list')
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
     
 class CensusVoting(TemplateView):
     permission_classes = [IsAdminUser]
@@ -216,7 +216,7 @@ class CensusVoting(TemplateView):
             form = CensusForm()
             return render(request, 'census_voting.html', {'form': form})
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
 
     def post(self, request, voting_id):
         if self.request.user.is_staff:
@@ -229,7 +229,7 @@ class CensusVoting(TemplateView):
                 return redirect('voting_list')
             return render(request, 'census_voting.html', {'form': form})
         else:
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+            return render(request, '403.html', status=403)
 
 
 class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
