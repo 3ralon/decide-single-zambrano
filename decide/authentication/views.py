@@ -145,7 +145,6 @@ class RegisterView(APIView):
             if form.is_valid():
                 user = form.save()
                 token, _ = Token.objects.get_or_create(user=user)
-                response = Response({'user_pk': user.pk, 'token': token.key}, status=HTTP_201_CREATED)
                 user_exists = User.objects.filter(username=user.username).exists()
                 token_exists = Token.objects.filter(key=token.key).exists()
                 if user_exists and token_exists:
