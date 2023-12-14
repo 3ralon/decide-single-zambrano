@@ -17,7 +17,7 @@ from mixnet.mixcrypt import ElGamal
 from mixnet.mixcrypt import MixCrypt
 from mixnet.models import Auth
 from voting.models import Voting, Question, QuestionOption
-from voting.forms import QuestionForm, QuestionOptionFormSet
+from voting.forms import QuestionForm, QuestionOptionFormSet, VotingForm
 
 
 class VotingTestCase(BaseTestCase):
@@ -698,7 +698,11 @@ class VotingListTestCase(TestCase):
 class VotingActionsTestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username='admin', password='admin')
+        self.admin_user = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='adminpassword'
+        )        
         q = Question(desc="Descripcion")
         q.save()
 
@@ -710,26 +714,104 @@ class VotingActionsTestCase(TestCase):
         self.voting = Voting(name="Votacion", question=q)
         self.voting.save()
     
-    def test_start_voting_as_admin(self):
-        self.client.force_login(self.user)
-        response = self.client.post(reverse('voting_start', args=[self.voting.id]))
+    def test_start_voting(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('voting_start', args=[self.voting.id]))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('voting_list'))
         self.voting.refresh_from_db()
         self.assertIsNotNone(self.voting.start_date)
 
-    def test_start_voting_as_non_admin(self):
-        response = self.client.post(reverse('voting_start', args=[self.voting.id]))
-        self.assertEqual(response.status_code, 403)
-
-    def test_stop_voting_as_admin(self):
-        self.client.force_login(self.user)
-        response = self.client.post(reverse('voting_stop', args=[self.voting.id]))
+    def test_stop_voting(self):
+        self.voting.create_pubkey()
+        self.voting.start_date = timezone.now()
+        self.voting.save()
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('voting_stop', args=[self.voting.id]))
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('voting_list'))
         self.voting.refresh_from_db()
         self.assertIsNotNone(self.voting.end_date)
+        
+class VotingCreationTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='adminpassword'
+        )
+        self.q = Question(desc="Descripcion")
+        self.q.save()
+        self.auth = Auth.objects.create(url=settings.BASEURL, me=True, name="test auth")
 
-    def test_stop_voting_as_non_admin(self):
-        response = self.client.post(reverse('voting_stop', args=[self.voting.id]))
+    def test_get_voting_creation_as_admin(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse('voting_creation'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'voting_creation.html')
+        self.assertIsInstance(response.context['form'], VotingForm)
+
+    def test_get_voting_creation_as_non_admin(self):
+        response = self.client.get(reverse('voting_creation'))
         self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, '403.html')
+
+    def test_post_voting_creation_as_admin(self):
+        self.client.force_login(self.admin_user)
+        data = {
+            'name': 'Sample Voting',
+            'desc': 'Sample description',
+            'question': self.q,
+            'auths': [self.auth],
+        }
+        form = VotingForm(data)
+        self.assertTrue(form.is_valid())
+        form.save()
+        self.assertEqual(Voting.objects.count(), 1)
+
+    def test_post_voting_creation_as_non_admin(self):
+        data = {
+            'name': 'Sample Voting',
+            'desc': 'Sample description',
+            'question': self.q,
+            'auths': [self.auth],
+        }
+        response = self.client.post(reverse('question_creation'), data)
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, '403.html')
+        self.assertEqual(Voting.objects.count(), 0)
+
+class VotingDeleteViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='adminpassword'
+        )
+        q = Question.objects.create(desc='Test question')
+        q.save()
+        self.voting = Voting.objects.create(name='Test voting', desc='Test voting description',
+                                            question=q)
+
+    def test_voting_delete_post(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse('voting_delete', args=[self.voting.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('voting_list'))
+        self.assertFalse(Voting.objects.filter(pk=self.voting.id).exists())
+
+    def test_voting_delete_post_unauthorized(self):
+        response = self.client.post(reverse('voting_delete', args=[self.voting.id]))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, '403.html')
+        self.assertTrue(Voting.objects.filter(pk=self.voting.id).exists())
+
+    def test_voting_delete_post_nonexistent_question(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse('voting_delete', args=[999]))
+
+        self.assertEqual(response.status_code, 404)
