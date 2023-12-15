@@ -17,6 +17,7 @@ from mixnet.mixcrypt import MixCrypt
 from mixnet.models import Auth
 from voting.models import Voting, Question, QuestionOption
 
+
 class VotingTestCase(BaseTestCase):
     def setUp(self):
         super().setUp()
@@ -563,16 +564,20 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
             url=settings.BASEURL, defaults={"me": True, "name": "test auth"}
         )
         auth.save()
-        
+
         # Default
         default_question = Question(desc="Pregunta default")
         default_question.save()
         for i in range(3):
-            opt = QuestionOption(question=default_question, option="opción default {}".format(i + 1))
+            opt = QuestionOption(
+                question=default_question, option="opción default {}".format(i + 1)
+            )
             opt.save()
-        
+
         default_voting = Voting(
-            name="Votación default", question=default_question, start_date=timezone.now()
+            name="Votación default",
+            question=default_question,
+            start_date=timezone.now(),
         )
         default_voting.save()
         default_voting.auths.add(auth)
@@ -585,21 +590,33 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         )
         yn_voting.save()
         yn_voting.auths.add(auth)
-        
+
         # Ranking
         ranking_question = Question(desc="Pregunta ranking", question_type="RANKING")
         ranking_question.save()
         for i in range(3):
-            opt = QuestionOption(question=ranking_question, option="opción ranking {}".format(i + 1))
+            opt = QuestionOption(
+                question=ranking_question, option="opción ranking {}".format(i + 1)
+            )
             opt.save()
         ranking_voting = Voting(
-            name="Votación ranking", question=ranking_question, start_date=timezone.now()
+            name="Votación ranking",
+            question=ranking_question,
+            start_date=timezone.now(),
         )
         ranking_voting.save()
         ranking_voting.auths.add(auth)
-        
+
         return default_voting, yn_question, ranking_voting
-        
+
+    def login_when_booth(self):
+        self.driver.find_element(By.CLASS_NAME, "navbar-toggler").click()
+        self.driver.find_element(By.CLASS_NAME, "btn btn-secondary").click()
+        input_username = self.driver.find_element_by_id("username")
+        input_password = self.driver.find_element_by_id("password")
+        input_username.send_keys("admin")
+        input_password.send_keys("admin")
+        self.driver.find_element(By.CLASS_NAME, "btn btn-primary mt-3").click()
 
     def setUp(self):
         (
@@ -607,7 +624,7 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
             self.yn_voting,
             self.ranking_voting,
         ) = self.create_votings()
-        
+
         # Selenium Setup
         self.base = BaseTestCase()
         self.base.setUp()
@@ -624,72 +641,71 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         self.base.tearDown()
 
     def test_no_seleccion_opcion_default(self):
-        self.login()
-        
         self.driver.get(f"{self.live_server_url}/booth/vote/{self.default_voting.id}")
+        self.login_when_booth()
         self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "input")) == 3)
-        
+
         self.driver.find_element(By.TAG_NAME, "button").click()
         self.assertTrue(
             len(
                 self.driver.find_elements(
-                    By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una opción.')]"
+                    By.XPATH,
+                    "//*[contains(text(), 'Error: debes seleccionar una opción.')]",
                 )
             )
             == 1
         )
-        
+
     def test_no_seleccion_opcion_yn(self):
-        self.login()
-        
         self.driver.get(f"{self.live_server_url}/booth/vote/{self.yn_voting.id}")
+        self.login_when_booth()
         self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "input")) == 2)
-        
+
         self.driver.find_element(By.TAG_NAME, "button").click()
         self.assertTrue(
             len(
                 self.driver.find_elements(
-                    By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una opción.')]"
+                    By.XPATH,
+                    "//*[contains(text(), 'Error: debes seleccionar una opción.')]",
                 )
             )
             == 1
         )
-        
+
     def test_no_seleccion_opcion_ranking(self):
-        self.login()
-        
         self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
+        self.login_when_booth()
         self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "select")) == 3)
         self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "option")) == 9)
-        
+
         self.driver.find_element(By.TAG_NAME, "button").click()
         self.assertTrue(
             len(
                 self.driver.find_elements(
-                    By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]"
+                    By.XPATH,
+                    "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
                 )
             )
             == 1
         )
 
     def test_seleccion_opcion_repetida_ranking(self):
-        self.login()
-        
         self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
+        self.login_when_booth()
         selects = self.driver.find_elements(By.TAG_NAME, "select")
         self.assertTrue(len(selects) == 3)
-        
+
         for tag in selects:
             select = Select(tag)
             select.select_by_index(0)
-        
+
         self.driver.find_element(By.TAG_NAME, "button").click()
         self.assertTrue(
             len(
                 self.driver.find_elements(
-                    By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]"
+                    By.XPATH,
+                    "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
                 )
             )
             == 1
         )
-        
