@@ -574,8 +574,8 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         default_voting = Voting(
             name="Votación default", question=default_question, start_date=timezone.now()
         )
-        default_voting.auths.add(auth)
         default_voting.save()
+        default_voting.auths.add(auth)
 
         # Yes/No
         yn_question = Question(desc="Pregunta YN", question_type="YESNO")
@@ -583,8 +583,8 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         yn_voting = Voting(
             name="Votación yes/no", question=yn_question, start_date=timezone.now()
         )
-        yn_voting.auths.add(auth)
         yn_voting.save()
+        yn_voting.auths.add(auth)
         
         # Ranking
         ranking_question = Question(desc="Pregunta ranking", question_type="RANKING")
@@ -595,8 +595,8 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         ranking_voting = Voting(
             name="Votación ranking", question=ranking_question, start_date=timezone.now()
         )
-        ranking_voting.auths.add(auth)
         ranking_voting.save()
+        ranking_voting.auths.add(auth)
         
         return default_voting, yn_question, ranking_voting
         
