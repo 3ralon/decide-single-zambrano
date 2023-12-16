@@ -650,7 +650,7 @@ class QuestionDeleteViewTest(TestCase):
         response = self.client.post(reverse('question_delete', args=[999]))
 
         self.assertEqual(response.status_code, 404)
-        
+
 class VotingListTestCase(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
@@ -669,7 +669,7 @@ class VotingListTestCase(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTemplateUsed(response, '403.html')
-        
+
 class VotingActionsTestCase(TestCase):
     def setUp(self):
         self.client = Client()
@@ -688,7 +688,7 @@ class VotingActionsTestCase(TestCase):
 
         self.voting = Voting(name="Votacion", question=q)
         self.voting.save()
-    
+
     def test_start_voting(self):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse('voting_start', args=[self.voting.id]))
@@ -767,8 +767,7 @@ class VotingDeleteViewTest(TestCase):
         )
         q = Question.objects.create(desc='Test question')
         q.save()
-        self.voting = Voting.objects.create(name='Test voting', desc='Test voting description',
-                                            question=q)
+        self.voting = Voting.objects.create(name='Test voting', desc='Test voting description', question=q)
 
     def test_voting_delete_post(self):
         self.client.force_login(self.admin_user)
