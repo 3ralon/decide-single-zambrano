@@ -123,7 +123,7 @@ class AuthTestCase(APITestCase):
             }
         )
         response = self.client.post("/authentication/register/", token, format="json")
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 302)
 
     def test_register_from_user(self):
         data = {
@@ -131,11 +131,14 @@ class AuthTestCase(APITestCase):
             "password1": "new_password",
             "password2": "new_password",
         }
-        response = self.client.post("/authentication/register/", data, format="json")
-        self.assertEqual(response.status_code, 201)
-        response_data = response.json()
-        self.assertTrue("token" in response_data)
-        self.assertTrue("user_pk" in response_data)
+
+        response = self.client.post("/authentication/register/", data, follow=True)
+        self.assertEqual(response.status_code, 200)
+        user_exists = User.objects.filter(username='new_user').exists()
+        self.assertTrue(user_exists)
+        user = User.objects.get(username='new_user')
+        token_exists = Token.objects.filter(user=user).exists()
+        self.assertTrue(token_exists)
 
         login_data = {"username": "new_user", "password": "new_password"}
         response = self.client.post("/authentication/login/", login_data, format="json")
