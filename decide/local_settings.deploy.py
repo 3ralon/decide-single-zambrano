@@ -35,6 +35,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.auth_backends.AuthenticationBackend",
+     "allauth.account.middleware.AccountMiddleware",
 ]
 
 STATIC_URL = "/static/"
