@@ -58,7 +58,7 @@ class BoothView(TemplateView):
             return context
         context["KEYBITS"] = settings.KEYBITS
         return context
-    
+
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
         if 'failed' in context:
