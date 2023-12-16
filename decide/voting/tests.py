@@ -496,9 +496,6 @@ class VotingRankingTestCase(BaseTestCase):
         return k.encrypt(msg)
 
     def store_votes(self, v):
-        import random
-        from Crypto.Util.number import bytes_to_long
-
         voters = list(Census.objects.filter(voting_id=v.id))
         voter = voters.pop()
         ranking_list = list(map(lambda o: o.number, v.question.options.all()))

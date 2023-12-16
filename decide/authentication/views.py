@@ -3,7 +3,6 @@ from rest_framework.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_400_BAD_REQUEST,
-    HTTP_401_UNAUTHORIZED,
 )
 from django.contrib.auth import logout
 from django.http import JsonResponse
@@ -14,13 +13,10 @@ from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404
 from allauth.socialaccount.models import SocialAccount
-from django.contrib.auth import authenticate
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from .forms import LoginForm
 from django.views.generic import TemplateView
@@ -72,34 +68,21 @@ class GetUserView(APIView):
 
 
 class LogoutView(TemplateView):
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             logout(request)
         return redirect("/")
 
     def post(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            # Delete the user's token.
+            # Borrar el token del usuario
             Token.objects.filter(user=request.user).delete()
             logout(request)
         return JsonResponse({"status": "OK"})
 
 
 class RegisterView(APIView):
-    template_name = 'registration_form.html'
-
-    def get_google_login_url(self, request):
-        # Obtener la URL de inicio de sesión de Google
-        try:
-            social_account = SocialAccount.objects.get(user=request.user, provider='google')
-            return social_account.get_login_url(request, redirect_to='/')
-        except SocialAccount.DoesNotExist:
-            return None
-
-    def get(self, request):
-        form = UserCreationForm()
-        google_login_url = self.get_google_login_url(request)
-        return render(request, self.template_name, {'form': form, 'google_login_url': google_login_url})
+    template_name = "registration_form.html"
 
     def handle_google_login(self, request):
 
@@ -148,7 +131,7 @@ class RegisterView(APIView):
                 user_exists = User.objects.filter(username=user.username).exists()
                 token_exists = Token.objects.filter(key=token.key).exists()
                 if user_exists and token_exists:
-                    return redirect('/')
+                    return redirect("/")
             else:
                 # Recuperar mensajes de error del formulario y agregarlos a los mensajes de Django
                 for field, errors in form.errors.items():
@@ -160,8 +143,8 @@ class RegisterView(APIView):
 
         # Si es un superusuario, manejar el registro del administrador
         if is_superuser:
-            username = request.data.get('username', '')
-            pwd = request.data.get('password', '')
+            username = request.data.get("username", "")
+            pwd = request.data.get("password", "")
             if not username or not pwd:
                 return Response({}, status=HTTP_400_BAD_REQUEST)
             try:
@@ -170,12 +153,16 @@ class RegisterView(APIView):
                     user.set_password(pwd)
                     user.save()
                     token, _ = Token.objects.get_or_create(user=user)
-                    return Response({'user_pk': user.pk, 'token': token.key}, status=HTTP_201_CREATED)
+                    return Response(
+                        {"user_pk": user.pk, "token": token.key},
+                        status=HTTP_201_CREATED,
+                    )
                 else:
-                    return Response({'error': 'User already exists'}, status=HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"error": "User already exists"}, status=HTTP_400_BAD_REQUEST
+                    )
             except IntegrityError:
                 return Response({}, status=HTTP_400_BAD_REQUEST)
-
 
     def get(self, request):
         form = UserCreationForm()
