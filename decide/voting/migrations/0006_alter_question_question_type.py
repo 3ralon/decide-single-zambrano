@@ -6,13 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('voting', '0005_question_question_type'),
+        ("voting", "0005_question_question_type"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='question',
-            name='question_type',
-            field=models.CharField(choices=[('DEFAULT', 'Default'), ('YESNO', 'Yes/No'), ('RANKING', 'Ranking')], default='DEFAULT', max_length=20),
+            model_name="question",
+            name="question_type",
+            field=models.CharField(
+                choices=[
+                    ("DEFAULT", "Default"),
+                    ("YESNO", "Yes/No"),
+                    ("RANKING", "Ranking"),
+                ],
+                default="DEFAULT",
+                max_length=20,
+            ),
         ),
     ]

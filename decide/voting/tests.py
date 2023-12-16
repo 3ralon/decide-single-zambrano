@@ -8,7 +8,10 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import Client, RequestFactory, TestCase
 
 from selenium import webdriver
+from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from base import mods
 from base.tests import BaseTestCase
@@ -86,29 +89,6 @@ class VotingTestCase(BaseTestCase):
                 voter = voters.pop()
                 mods.post("store", json=data)
         return clear
-
-    """def test_complete_voting(self):
-        v = self.create_voting()
-        self.create_voters(v)
-
-        v.create_pubkey()
-        v.start_date = timezone.now()
-        v.save()
-
-        clear = self.store_votes(v)
-
-        self.login()  # set token
-        v.tally_votes(self.token)
-
-        tally = v.tally
-        tally.sort()
-        tally = {k: len(list(x)) for k, x in itertools.groupby(tally)}
-
-        for q in v.question.options.all():
-            self.assertEqual(tally.get(q.number, 0), clear.get(q.number, 0))
-
-        for q in v.postproc:
-            self.assertEqual(tally.get(q["number"], 0), q["votes"])"""
 
     def test_create_voting_from_api(self):
         data = {"name": "Example"}
@@ -519,9 +499,6 @@ class VotingRankingTestCase(BaseTestCase):
         return k.encrypt(msg)
 
     def store_votes(self, v):
-        import random
-        from Crypto.Util.number import bytes_to_long
-
         voters = list(Census.objects.filter(voting_id=v.id))
         voter = voters.pop()
         ranking_list = list(map(lambda o: o.number, v.question.options.all()))
@@ -578,8 +555,7 @@ class VotingRankingTestCase(BaseTestCase):
         )
         postp_selected = int("".join(postp))
 
-        self.assertIn(postp_selected, list(tally.keys()))
-        
+        self.assertIn(postp_selected, list(tally.keys()))    
 
 class QuestionListTestCase(TestCase):
     def setUp(self):
@@ -599,7 +575,6 @@ class QuestionListTestCase(TestCase):
 
         self.assertEqual(response.status_code, 403)
         self.assertTemplateUsed(response, '403.html')
-        
 
 class QuestionCreationTestCase(TestCase):
     def setUp(self):
@@ -702,7 +677,7 @@ class VotingActionsTestCase(TestCase):
             username='admin',
             email='admin@example.com',
             password='adminpassword'
-        )        
+        )
         q = Question(desc="Descripcion")
         q.save()
 
@@ -732,7 +707,7 @@ class VotingActionsTestCase(TestCase):
         self.assertRedirects(response, reverse('voting_list'))
         self.voting.refresh_from_db()
         self.assertIsNotNone(self.voting.end_date)
-        
+
 class VotingCreationTestCase(TestCase):
     def setUp(self):
         self.client = Client()
@@ -815,3 +790,189 @@ class VotingDeleteViewTest(TestCase):
         response = self.client.post(reverse('voting_delete', args=[999]))
 
         self.assertEqual(response.status_code, 404)
+
+class VotingLimitsTestCase(StaticLiveServerTestCase):
+    def create_votings(self):
+
+        # Auth para votings
+        auth, _ = Auth.objects.get_or_create(
+            url=settings.BASEURL, defaults={"me": True, "name": "test auth"}
+        )
+        auth.save()
+
+        # Default
+        default_question = Question(desc="Pregunta default")
+        default_question.save()
+        for i in range(3):
+            opt = QuestionOption(
+                question=default_question, option="opción default {}".format(i + 1)
+            )
+            opt.save()
+
+        default_voting = Voting(
+            name="Votación default",
+            question=default_question,
+            start_date=timezone.now(),
+        )
+        default_voting.save()
+        default_voting.auths.add(auth)
+
+        # Yes/No
+        yn_question = Question(desc="Pregunta YN", question_type="YESNO")
+        yn_question.save()
+        yes = QuestionOption(question=yn_question, option="Yes")
+        yes.save()
+        no = QuestionOption(question=yn_question, option="No")
+        no.save()
+        yn_voting = Voting(
+            name="Votación yes/no", question=yn_question, start_date=timezone.now()
+        )
+        yn_voting.save()
+        yn_voting.auths.add(auth)
+
+        # Ranking
+        ranking_question = Question(desc="Pregunta ranking", question_type="RANKING")
+        ranking_question.save()
+        for i in range(3):
+            opt = QuestionOption(
+                question=ranking_question, option="opción ranking {}".format(i + 1)
+            )
+            opt.save()
+        ranking_voting = Voting(
+            name="Votación ranking",
+            question=ranking_question,
+            start_date=timezone.now(),
+        )
+        ranking_voting.save()
+        ranking_voting.auths.add(auth)
+
+        default_voting.create_pubkey()
+        yn_voting.create_pubkey()
+        ranking_voting.create_pubkey()
+
+        return default_voting, yn_voting, ranking_voting
+
+    def login_when_booth(self):
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/nav/div/button"
+        ).click()
+        self.driver.find_element(
+            By.XPATH, "//*[@id='navbarSupportedContent']/ul/li/button"
+        ).click()
+        self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//*[@id='registerModal']/div/div/div[2]/form/button")
+            )
+        )
+        input_username = self.driver.find_element(By.ID, "username")
+        input_username.send_keys("admin")
+        input_password = self.driver.find_element(By.ID, "password")
+        input_password.send_keys("qwerty")
+        self.driver.find_element(
+            By.XPATH, "//*[@id='registerModal']/div/div/div[2]/form/button"
+        ).click()
+
+    def setUp(self):
+        # Selenium Setup
+        self.base = BaseTestCase()
+        self.base.setUp()
+
+        (
+            self.default_voting,
+            self.yn_voting,
+            self.ranking_voting,
+        ) = self.create_votings()
+
+        # Opciones de Chrome
+        options = webdriver.ChromeOptions()
+        options.headless = True
+        self.driver = webdriver.Chrome(options=options)
+        self.driver.implicitly_wait(2)
+        self.wait = WebDriverWait(self.driver, 2)
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+        self.driver.quit()
+        self.base.tearDown()
+
+    def test_no_seleccion_opcion_default(self):
+        self.driver.get(f"{self.live_server_url}/booth/vote/{self.default_voting.id}/")
+        self.login_when_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
+            )
+        )
+        elements = self.driver.find_elements(By.TAG_NAME, "form")
+        self.assertEquals(len(elements), 3)
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_element(
+            By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una opción.')]"
+        )
+        self.assertIsNotNone(alert)
+
+    def test_no_seleccion_opcion_yn(self):
+        self.driver.get(f"{self.live_server_url}/booth/vote/{self.yn_voting.id}")
+        self.login_when_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
+            )
+        )
+        elements = self.driver.find_elements(By.TAG_NAME, "form")
+        self.assertEquals(len(elements), 2)
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_elements(
+            By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una opción.')]"
+        )
+        self.assertIsNotNone(alert)
+
+    def test_no_seleccion_opcion_ranking(self):
+        self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
+        self.login_when_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
+            )
+        )
+        select_tags = self.driver.find_elements(By.TAG_NAME, "select")
+        option_tags = self.driver.find_elements(By.TAG_NAME, "option")
+        self.assertEquals(len(select_tags), 3)
+        self.assertEquals(len(option_tags), 9)
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_element(
+            By.XPATH,
+            "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
+        )
+        self.assertIsNotNone(alert)
+
+    def test_seleccion_opcion_repetida_ranking(self):
+        self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
+        self.login_when_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
+            )
+        )
+        select_tags = self.driver.find_elements(By.TAG_NAME, "select")
+        self.assertEquals(len(select_tags), 3)
+
+        for tag in select_tags:
+            select = Select(tag)
+            select.select_by_index(0)
+
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_elements(
+            By.XPATH,
+            "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
+        )
+        self.assertIsNotNone(alert)

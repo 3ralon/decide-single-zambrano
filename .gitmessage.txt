@@ -12,7 +12,7 @@ cuerpo
 # conf (modificación de archivos de configuración)
 
 ### asunto
-# Consiste en una breve descripción del problema que se ha tratado y que debe de comenzar con un verbo en participio. 
+# Consiste en una breve descripción del problema que se ha tratado y que debe de comenzar con un verbo en participio.
 # Se referenciará la issue correspondiente (en caso de existir) tal que: `#<ID_issue>`
 
 ### cuerpo (opcional)
