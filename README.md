@@ -73,8 +73,8 @@ base de datos que utilizaremos:
 
     ./manage.py migrate
 
-Creamos el superusuario, que será el administrador del sistema. Con este usuario podremos tener acceso 
-a todas las funcionalidades ofrecidas por Decide, como por ejemplo crear usuarios. El comando es el 
+Creamos el superusuario, que será el administrador del sistema. Con este usuario podremos tener acceso
+a todas las funcionalidades ofrecidas por Decide, como por ejemplo crear usuarios. El comando es el
 siguiente:
 
     ./manage.py createsuperuser
@@ -111,7 +111,7 @@ Aclaración: En esta guía vamos a usar como url de base: "localhost:8000".
 
 ### 1. Login como administrador del sistema
 
-Una vez iniciada la aplicación, accedemos a http://localhost:8000/admin/ e ingresamos las credenciales 
+Una vez iniciada la aplicación, accedemos a http://localhost:8000/admin/ e ingresamos las credenciales
 del super usuario creado anteriormente.
 
 ![Imagen 01: Login](./resources/quickstart/00_login.png)
@@ -122,13 +122,13 @@ Si nos hemos conectado con éxito como un administrador, nos debería aparecer l
 
 ### 2. Creación de questions
 
-Buscamos el botón "add" dentro del apartado "questions" de la categoría "voting". En el textarea 
+Buscamos el botón "add" dentro del apartado "questions" de la categoría "voting". En el textarea
 etiquetado como "Desc" se añade la pregunta a realizar en la futura votación. Después en los
-apartados de "question options" añadimos todas las posibles respuestas a la pregunta definida 
+apartados de "question options" añadimos todas las posibles respuestas a la pregunta definida
 anteriormente. Estas "questions options" se pueden eliminar clickando a la "X" situada a la derecha y
-se pueden añadir mas opciones pulsando en "add questions options" situado mas abajo. 
+se pueden añadir mas opciones pulsando en "add questions options" situado mas abajo.
 
-No es necesario rellenar todas las "question options" que aparezcan en la vista. Una vez tengamos 
+No es necesario rellenar todas las "question options" que aparezcan en la vista. Una vez tengamos
 todas las posibles respuestas que deseamos podemos guardar haciendo click en el botón "Save".
 
 ![Imagen 03: Questions](./resources/quickstart/02_question.png)
@@ -139,12 +139,12 @@ Hacemos click al botón "add" dentro de "Votings" en la categoría "Voting" y no
 de creacion de votaciones.
 
 En dicho formulario le ponemos un nombre a la votación, la descripción es opcional, en el desplegable
-"question" nos debe aparecer la pregunta generada en el apartado anterior de esta guía y la 
-seleccionamos. 
+"question" nos debe aparecer la pregunta generada en el apartado anterior de esta guía y la
+seleccionamos.
 
 ![Imagen 04: Voting](./resources/quickstart/03_voting.png)
 
-En el apartado "Auths" de su primera votación deberá crear uno. Para ello, debe clickar en el "+" a la 
+En el apartado "Auths" de su primera votación deberá crear uno. Para ello, debe clickar en el "+" a la
 derecha de la lista de "Auths". Aparecerá una ventana nueva donde deberá rellenar un formulario con el
 nombre que desee y la url, en nuestro caso es "http://localhost:8000".
 
@@ -154,13 +154,13 @@ Pulsamos en el botón "Save" y ya tenemos nuestra votación creada.
 
 ### 4. Creacion de census
 
-En "votings" buscamos la votación que hemos generado y entramos en ella para mirar en la barra de 
+En "votings" buscamos la votación que hemos generado y entramos en ella para mirar en la barra de
 direcciones la id de nuestra votación. En el siguiente ejemplo, la id es 19.
 
     http://localhost:8000/admin/voting/voting/19/change/
 
-Nos dirigimos al apartado "censuss" en la categoría "census" y clickamos en "add". Ponemos la id de 
-nuestra votacion en "voting id" y en "voter id" ponemos la id del votante que queremos añadir. 
+Nos dirigimos al apartado "censuss" en la categoría "census" y clickamos en "add". Ponemos la id de
+nuestra votacion en "voting id" y en "voter id" ponemos la id del votante que queremos añadir.
 
 NOTA: el administrador si es el primer usuario creado tendrá la id 1.
 
@@ -168,10 +168,10 @@ NOTA: el administrador si es el primer usuario creado tendrá la id 1.
 
 ### 5. Comenzar la votación
 
-Llegados a este punto necesitamos abrir una votación, para ello debemos marcar el checkbox a la 
+Llegados a este punto necesitamos abrir una votación, para ello debemos marcar el checkbox a la
 izquierda de nuestra votación. Una vez seleccionado, tenemos que ir al desplegable de "action",
-seleccionamos la opción "Start" y pulsamos en el boton "Go". Esperamos a que aparezca el "Start date" 
-y ya tendríamos la votación abierta y lista para votar. 
+seleccionamos la opción "Start" y pulsamos en el boton "Go". Esperamos a que aparezca el "Start date"
+y ya tendríamos la votación abierta y lista para votar.
 
 ![Imagen 07: Start voting](./resources/quickstart/06_start.png)
 
@@ -185,17 +185,17 @@ Para poder votar primero debemos ingresar en la barra de direcciones de nuestro 
 
 Una vez accedemos, debemos iniciar sesión con un usuario que esté incluido en el censo.
 
-Cuando nos aparezca la pregunta, ya podemos seleccionar la respuesta y guardarla como un voto. 
+Cuando nos aparezca la pregunta, ya podemos seleccionar la respuesta y guardarla como un voto.
 Al confirmar el voto, nos aparecerá lo siguiente:
 
 ![Imagen 09: Vote success](./resources/quickstart/08_voted.png)
 
-El mensaje de "Congratulations. Your vote has been sent" nos confirma que nuestro voto ha sido 
+El mensaje de "Congratulations. Your vote has been sent" nos confirma que nuestro voto ha sido
 registrado correctamente.
 
 ### 7. Conteo de votos
 
-Nos dirigimos nuevamente al apartado "voting" desde nuestro perfil de administrador. Primero tenemos 
+Nos dirigimos nuevamente al apartado "voting" desde nuestro perfil de administrador. Primero tenemos
 que cerrar la votación, para ello seleccionamos el checkbox a la izquierda de nuestra votación
 marcamos "Stop" y pulsamos el botón "Go". Notará que en el apartado "End Date" ahora aparece
 la fecha actual, esto nos indica que la votación ha sido cerrada y está lista para el conteo.
@@ -432,7 +432,7 @@ Poblar con datos iniciales
 --------------------------
 
 Para probar el correcto funcionamiento de nuestra aplicación de decide, hemos generado una serie de
-datos iniciales. Para ello, hemos elaborado un archivo JSON con datos que Django usa para generar 
+datos iniciales. Para ello, hemos elaborado un archivo JSON con datos que Django usa para generar
 varias votaciones y usuarios de manera automática. Este se ha dotado con el nombre de "populate.json"
 y se ha colocado junto a "manage.py". Lo pasos a seguir son los comentados abajo.
 
@@ -459,11 +459,11 @@ donde # es la sucesión desde el valor 1 hasta el 3.
 En cuanto a las votaciones, se ha creado una votación cerrada con su correspondiente conteo,
 una votación abierta con la que podemos interactuar y una votación que no se ha iniciado,
 cubriendo así todas las posibilidades.
-Si se quieren añadir más casuística a la carga inicial, basta con editar el "populate.json" siguiendo 
+Si se quieren añadir más casuística a la carga inicial, basta con editar el "populate.json" siguiendo
 la misma estructura que los datos contenidos en el mismo.
 
 
-Cabe añadir que previo a ejecutar ambos comandos, deberemos haber activado nuestro entorno de 
+Cabe añadir que previo a ejecutar ambos comandos, deberemos haber activado nuestro entorno de
 Python 3.9.
 
 
@@ -473,7 +473,7 @@ El archivo "populate.json" se ha generado manualmente con ayuda de la documentac
 Versiones actuales
 ------------------
 
-En las ultimas actualizaciones se han modificado las versiones usadas por la aplicación Decide. Las 
+En las ultimas actualizaciones se han modificado las versiones usadas por la aplicación Decide. Las
 versiones usadas actualmente se corresponden a las siguientes:
 
 * Django = 4.1

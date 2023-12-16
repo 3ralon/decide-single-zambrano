@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    input, textarea {
+        border: 1px solid #ccc;
+        box-shadow: 0 0 5px #ccc;
+        padding: 5px;
+    }
+</style>
+<div class="w-full md:w-2/3 lg:w-1/2 xl:w-1/3 mx-auto">
+    <form method="post" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+        {% csrf_token %}
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ form.desc.id_for_label }}">Descripción</label>
+            {{ form.desc }}
+        </div>
+        <div class="mb-6">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ form.question_type.id_for_label }}">TIpo de pregunta</label>
+            {{ form.question_type }}
+        </div>
+        {{ formset.management_form }}
+        <label class="block text-gray-800 text-m font-bold mb-2 mt-5">Opciones para la pregunta:</label>
+        <div id="form-set">
+            {% for form in formset %}
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="{{ form.option.id_for_label }}">Opción {{ forloop.counter }}</label>
+                {{ form.option }}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-right">
+            <button id="add-more" type="button" class="bg-gray-500 hover:bg-gray-700 text-white py-1 px-2 mb-2 text-xs rounded">Añadir opciones</button>
+        </div>
+        <div class="flex items-center justify-between">
+            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="submit">
+                Crear Pregunta
+            </button>
+        </div>
+    </form>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#id_question_type').change(function() {
+            if ($(this).val() == 'YESNO') {
+                $('#form-set').hide();
+            } else {
+                $('#form-set').show();
+            }
+        });
+    });
+</script>
+<div id="empty-form" style="display:none">
+    <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="id_options-__prefix__-option">Opción </label>
+        <input type="text" name="options-__prefix__-option" id="id_options-__prefix__-option">
+    </div>
+</div>
+<script>
+    $(document).ready(function() {
+        $('#add-more').click(function() {
+            var formIdx = $('#id_options-TOTAL_FORMS').val();
+            var newForm = $($('#empty-form').html().replace(/__prefix__/g, formIdx));
+            newForm.find('label').append(' ' + (parseInt(formIdx) + 1));
+            $('#form-set').append(newForm);
+            $('#id_options-TOTAL_FORMS').val(parseInt(formIdx) + 1);
+        });
+    });
+    </script>
+{% endblock %}

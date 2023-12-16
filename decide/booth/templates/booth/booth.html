@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_booth.html" %}
 {% load i18n static %}
 
 {% block extrahead %}
@@ -14,7 +14,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-dark bg-primary">
         <div class="container-fluid">
-            <div class="navbar-brand" >Decide</div>
+            <a href="{% url 'home' %}" class="navbar-brand">Decide</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -118,13 +118,25 @@
         <div v-if="!signup">
             <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
             <h2>[[ voting.question.desc ]]</h2>
+            <h5 v-show="voting.question.question_type == 'RANKING'">Ordena en función de tus preferencias</h3>
+            <h5 v-show="voting.question.question_type != 'RANKING'">Selecciona una de las preguntas</h3>
             <form v-for="opt in voting.question.options" :key="opt.number">
                 <div class="form-group">
-                    <input type="radio" v-model="selected"
-                                :id="'q' + opt.number"
-                                name="question"
-                                :value="opt.number">
+                    <div v-if="voting.question.question_type == 'RANKING'">
+                        <label>[[ opt.option ]]</label>
+                        <select v-model="selectedRanking[opt.number - 1]">
+                            <option v-for="rank in Array(voting.question.options.length).fill().map((_, index) => index + 1)" :key="rank">
+                                [[ rank ]]
+                            </option>
+                        </select>
+                    </div>
+                    <div v-else>
+                        <input type="radio" v-model="selected"
+                            :id="'q' + opt.number"
+                            name="question"
+                            :value="opt.number">
                         [[ opt.option ]]
+                    </div>
                 </div>
             </form>
             <button class="btn btn-primary mt-3" v-on:click="decideSend">
@@ -135,7 +147,7 @@
     </div>
 
 </div>
-    
+
 {% endblock %}
 
 {% block extrabody %}
@@ -163,6 +175,7 @@
             data() {
                 return {
                     voting: voting,
+                    selectedRanking: [],
                     selected: "",
                     signup: true,
                     successVote: false,
@@ -257,12 +270,29 @@
                     this.successVote = false;
                 },
                 decideEncrypt() {
-                    var bigmsg = BigInt.fromJSONObject(this.selected.toString());
+                    var bigmsh = BigInt();
+                    if (voting.question.question_type == 'RANKING') {
+                        bigmsg = BigInt.fromJSONObject(this.selectedRanking.toString());
+                    } else {
+                        bigmsg = BigInt.fromJSONObject(this.selected.toString());
+                    }
                     var cipher = ElGamal.encrypt(this.bigpk, bigmsg);
                     return cipher;
                 },
                 decideSend(evt) {
                     evt.preventDefault();
+                    try {
+                        if (voting.question.question_type != 'RANKING' && !this.selected) {
+                            throw new Error('debes seleccionar una opción.');
+                        }
+                        if (voting.question.question_type == 'RANKING' && !this.processRanking(this.selectedRanking.toString())) {
+                            throw new Error('debes seleccionar una posición para cada opción.');
+                        }
+                    } catch (error) {
+                        this.successVote = false
+                        this.showAlert("danger", '{% trans "" %}' + error);
+                        return null;
+                    }
                     var v = this.decideEncrypt();
                     var data = {
                         vote: {a: v.alpha.toString(), b: v.beta.toString()},
@@ -274,12 +304,21 @@
                         .then(data => {
                             this.successVote = true;
                             this.alertShow = false;
-                            this.showAlert("success", '{% trans "Congratulations. Your vote has been sent" %}');
+                            this.showAlert("success", '{% trans "Felicidades, tu voto ha sido enviado" %}');
                         })
                         .catch(error => {
                             this.succesVote = false;
                             this.showAlert("danger", '{% trans "Error: " %}' + error);
                         });
+                },
+                processRanking(ranking) {
+                    let rankingArr = ranking.split(',');
+                    let rankingSet = new Set(rankingArr);
+                    let numOptions = this.voting.question.options.length
+                    if (rankingSet.size !== rankingArr.length || rankingArr.length !== numOptions) {
+                        return false
+                    }
+                    return true
                 },
                 showAlert(lvl, msg) {
                     this.alertLvl = lvl;

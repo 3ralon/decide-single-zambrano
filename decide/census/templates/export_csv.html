@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Descargar CSV</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: 	rgb(208,232,242);
+        }
+        a {
+            display: inline-block;
+            padding: 10px 20px;
+            color: #fff;
+            background-color: #297ad1;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 30px;
+            font-weight: bold;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    .top-right {
+        font-family:'Franklin Gothic Medium';
+        position: absolute;
+        top: 30px;
+        right: 35px;
+        font-size: 35px;
+        color:midnightblue;
+        }
+    #formulario-csv {
+        display: flex;
+        flex-direction: column;
+        gap: 1em;
+    }
+
+    </style>
+</head>
+<body>
+    <div class="top-right">DECIDE</div>
+    <section id="formulario-csv">
+        <form id="export-all-census" action="{% url 'export-all-census' %}" method="POST" class="elemento-bloque">
+            {% csrf_token %}
+            <input type="submit" id="submit-all" value="Exportar CSV completo">
+        </form>
+
+        <form id="export-to-csv" action="{% url 'export-to-csv' %}" method="POST" class="elemento-bloque">
+            {% csrf_token %}
+            <label for="voting_id">Introduce la ID de votación:</label>
+            <input type="number" id="voting_id" min="0"  name="voting_id" required>
+            <input type="submit" id="submit-specific" value="Exportar a votación a CSV">
+        </form>
+    </section>
+
+</body>
+
+</html>
