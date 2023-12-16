@@ -4,15 +4,9 @@ from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.test import TestCase
-from rest_framework.test import APIClient
-from rest_framework.test import APITestCase
 
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 
 from base import mods
 from base.tests import BaseTestCase
@@ -21,7 +15,6 @@ from mixnet.mixcrypt import ElGamal
 from mixnet.mixcrypt import MixCrypt
 from mixnet.models import Auth
 from voting.models import Voting, Question, QuestionOption
-from datetime import datetime
 
 
 class VotingTestCase(BaseTestCase):
@@ -90,29 +83,6 @@ class VotingTestCase(BaseTestCase):
                 voter = voters.pop()
                 mods.post("store", json=data)
         return clear
-
-    """def test_complete_voting(self):
-        v = self.create_voting()
-        self.create_voters(v)
-
-        v.create_pubkey()
-        v.start_date = timezone.now()
-        v.save()
-
-        clear = self.store_votes(v)
-
-        self.login()  # set token
-        v.tally_votes(self.token)
-
-        tally = v.tally
-        tally.sort()
-        tally = {k: len(list(x)) for k, x in itertools.groupby(tally)}
-
-        for q in v.question.options.all():
-            self.assertEqual(tally.get(q.number, 0), clear.get(q.number, 0))
-
-        for q in v.postproc:
-            self.assertEqual(tally.get(q["number"], 0), q["votes"])"""
 
     def test_create_voting_from_api(self):
         data = {"name": "Example"}
@@ -523,9 +493,6 @@ class VotingRankingTestCase(BaseTestCase):
         return k.encrypt(msg)
 
     def store_votes(self, v):
-        import random
-        from Crypto.Util.number import bytes_to_long
-
         voters = list(Census.objects.filter(voting_id=v.id))
         voter = voters.pop()
         ranking_list = list(map(lambda o: o.number, v.question.options.all()))

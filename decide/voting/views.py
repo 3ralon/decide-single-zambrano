@@ -51,7 +51,7 @@ class QuestionView(generics.ListCreateAPIView):
 class QuestionList(TemplateView):
     permission_classes = [IsAdminUser]
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         if request.user.is_staff:
             questions = Question.objects.all()
             return render(request, "question_list.html", {"questions": questions})
@@ -192,7 +192,7 @@ class VotingList(TemplateView):
 class VotingTally(TemplateView):
     permission_classes = [IsAdminUser]
 
-    def get(self, request, voting_id):
+    def get(self, request, voting_id, *args, **kwargs):
         if request.user.is_staff:
             voting = get_object_or_404(Voting, pk=voting_id)
             if voting.tally or not voting.end_date or not voting.start_date:

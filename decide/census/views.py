@@ -1,32 +1,21 @@
 from typing import Any
 from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import generics, status
-from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.status import (
-    HTTP_200_OK as ST_200,
     HTTP_201_CREATED as ST_201,
     HTTP_204_NO_CONTENT as ST_204,
-    HTTP_400_BAD_REQUEST as ST_400,
     HTTP_401_UNAUTHORIZED as ST_401,
-    HTTP_403_FORBIDDEN as ST_403,
     HTTP_409_CONFLICT as ST_409,
 )
 import csv
-from django.views import View
 from base.perms import UserIsStaff
 from .models import Census
 from django.http import HttpResponse, HttpResponseForbidden
-from django.contrib.auth.decorators import user_passes_test
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
-import csv
-from .models import Census
+from django.shortcuts import render
 from voting.models import Voting
 from django.views.generic.base import TemplateView
-from django.contrib.auth.decorators import login_required
 
 
 class CensusExportationToCSV(TemplateView):

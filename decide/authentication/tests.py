@@ -134,9 +134,9 @@ class AuthTestCase(APITestCase):
 
         response = self.client.post("/authentication/register/", data, follow=True)
         self.assertEqual(response.status_code, 200)
-        user_exists = User.objects.filter(username='new_user').exists()
+        user_exists = User.objects.filter(username="new_user").exists()
         self.assertTrue(user_exists)
-        user = User.objects.get(username='new_user')
+        user = User.objects.get(username="new_user")
         token_exists = Token.objects.filter(user=user).exists()
         self.assertTrue(token_exists)
 
