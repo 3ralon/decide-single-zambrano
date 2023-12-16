@@ -30,10 +30,9 @@ class BoothView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        try:   
+        try:
             if self.request.user.is_anonymous:
                 raise PermissionDenied()
-            
             # Check if voting exists and is active
             vid = kwargs.get("voting_id", 0)
             voting_exists = Voting.objects.filter(
@@ -41,28 +40,23 @@ class BoothView(TemplateView):
             ).exists()
             if not voting_exists:
                 raise Http404()
-            
             # Check if user is in census
             user_census_exists = Census.objects.filter(
                 voter_id=self.request.user.id, voting_id=vid
             ).exists()
             if not user_census_exists:
                 raise PermissionDenied()
-
             r = mods.get("voting", params={"id": vid})
             # Casting numbers to string to manage in javascript with BigInt
             # and avoid problems with js and big number conversions
             for k, v in r[0]["pub_key"].items():
                 r[0]["pub_key"][k] = str(v)
-
             context["voting"] = json.dumps(r[0])
         except Exception as e:
             context["failed"] = True
             context["http_error"] = e
             return context
-
         context["KEYBITS"] = settings.KEYBITS
-
         return context
     
     def get(self, request, *args, **kwargs):
