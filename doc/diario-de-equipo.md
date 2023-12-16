@@ -60,7 +60,7 @@ Aclarar también que hubo pequeñas reuniones presenciales casi todos los martes
 
 * Miembros: Todos los integrantes del grupo.
 ### Puntos a tratar: <br>
-1. Mejora documentación del README 
+1. Mejora documentación del README
 2. Investigar implementación de docker
 3. Investigar implementación de Vagrant
 4. Realización del vídeo para el M3

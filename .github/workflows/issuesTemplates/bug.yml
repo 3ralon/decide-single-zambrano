@@ -1,0 +1,41 @@
+name: Bugs
+description : informar de errores
+labels: [bug]
+
+body:
+    - type: markdown
+        attributes:
+        value: |
+            **Describe el bug**
+            Una descripción clara y concisa de cuál es el bug.
+
+            **Para reproducir**
+            Pasos para reproducir el comportamiento:
+
+
+
+            **Comportamiento esperado**
+            Una descripción  de lo que esperaba que sucediera.
+
+            **Capturas de pantalla**
+            Si corresponde, agregue capturas de pantalla para ayudar a explicar su problema.
+
+
+
+    - type: input
+        id: title
+        attributes:
+        label: Título
+        description: Un título corto y descriptivo.
+        placeholder: Ingrese el título del bug
+
+    - type: textarea
+        id: description
+        attributes:
+        label: Descripción
+        description: Describa el bug de manera clara y concisa.
+        placeholder: Ingrese la descripción del bug
+
+
+
+

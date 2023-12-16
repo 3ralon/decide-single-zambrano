@@ -5,6 +5,10 @@ on:
     branches:
       - develop
       - master
+  workflow_call:
+    secrets:
+      CODACY_PROJECT_TOKEN:
+        required: true
 
 jobs:
   build:
@@ -48,11 +52,20 @@ jobs:
     - name: Run tests
       run: |
         cd decide
-        coverage run --branch --source=. ./manage.py test  --keepdb 
-        coverage xml 
+        coverage run --branch --source=. ./manage.py test  --keepdb
+        coverage xml
     - name: Codacy Coverage Reporter
       uses: codacy/codacy-coverage-reporter-action@v1
       with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: decide/coverage.xml
-
+  deploy:
+    if: ${{ github.ref == 'main' || github.ref == 'develop' }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy
+      env:
+        deploy_url: ${{secrets.RENDER_DEPLOY_HOOK_URL}}
+      run: |
+        curl "$deploy_url"

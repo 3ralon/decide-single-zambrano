@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="w-full md:w-2/3 lg:w-1/2 xl:w-1/3 mx-auto">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl">Lista de Preguntas</h2>
+        <a href="{% url 'question_creation' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-xs">Crear Pregunta</a>
+    </div>
+    {% for question in questions %}
+    <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 relative">
+        <h3 class="text-gray-700 text-lg font-bold mb-2">{{ question.desc }}</h3>
+        <p class="text-gray-700 text-sm mb-2">Tipo de pregunta: {{ question.question_type}}</p>
+        <form method="POST" action="{% url 'question_delete' question.id %}" class="absolute top-0 right-0">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">X</button>
+        </form>
+        {% if question.options.all %}
+            <p class="text-gray-700 text-sm mb-2">Opciones:</p>
+            <ul>
+                {% for option in question.options.all %}
+                <li class="m-1 ml-4">{{ option }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p>No hay preguntas.</p>
+    {% endfor %}
+</div>
+{% endblock %}
