@@ -8,6 +8,8 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 from base import mods
 from base.tests import BaseTestCase
@@ -585,6 +587,10 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         # Yes/No
         yn_question = Question(desc="Pregunta YN", question_type="YESNO")
         yn_question.save()
+        yes = QuestionOption(question=yn_question, option="Yes")
+        yes.save()
+        no = QuestionOption(question=yn_question, option="No")
+        no.save()
         yn_voting = Voting(
             name="Votación yes/no", question=yn_question, start_date=timezone.now()
         )
@@ -607,32 +613,49 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         ranking_voting.save()
         ranking_voting.auths.add(auth)
 
-        return default_voting, yn_question, ranking_voting
+        default_voting.create_pubkey()
+        yn_voting.create_pubkey()
+        ranking_voting.create_pubkey()
+
+        return default_voting, yn_voting, ranking_voting
 
     def login_when_booth(self):
-        self.driver.find_element(By.CLASS_NAME, "navbar-toggler").click()
-        self.driver.find_element(By.CLASS_NAME, "btn btn-secondary").click()
-        input_username = self.driver.find_element_by_id("username")
-        input_password = self.driver.find_element_by_id("password")
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/nav/div/button"
+        ).click()
+        self.driver.find_element(
+            By.XPATH, "//*[@id='navbarSupportedContent']/ul/li/button"
+        ).click()
+        self.wait.until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//*[@id='registerModal']/div/div/div[2]/form/button")
+            )
+        )
+        input_username = self.driver.find_element(By.ID, "username")
         input_username.send_keys("admin")
-        input_password.send_keys("admin")
-        self.driver.find_element(By.CLASS_NAME, "btn btn-primary mt-3").click()
+        input_password = self.driver.find_element(By.ID, "password")
+        input_password.send_keys("qwerty")
+        self.driver.find_element(
+            By.XPATH, "//*[@id='registerModal']/div/div/div[2]/form/button"
+        ).click()
 
     def setUp(self):
+        # Selenium Setup
+        self.base = BaseTestCase()
+        self.base.setUp()
+
         (
             self.default_voting,
             self.yn_voting,
             self.ranking_voting,
         ) = self.create_votings()
 
-        # Selenium Setup
-        self.base = BaseTestCase()
-        self.base.setUp()
-
         # Opciones de Chrome
         options = webdriver.ChromeOptions()
         options.headless = True
         self.driver = webdriver.Chrome(options=options)
+        self.driver.implicitly_wait(2)
+        self.wait = WebDriverWait(self.driver, 2)
         super().setUp()
 
     def tearDown(self):
@@ -641,71 +664,82 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         self.base.tearDown()
 
     def test_no_seleccion_opcion_default(self):
-        self.driver.get(f"{self.live_server_url}/booth/vote/{self.default_voting.id}")
+        self.driver.get(f"{self.live_server_url}/booth/vote/{self.default_voting.id}/")
         self.login_when_booth()
-        self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "input")) == 3)
-
-        self.driver.find_element(By.TAG_NAME, "button").click()
-        self.assertTrue(
-            len(
-                self.driver.find_elements(
-                    By.XPATH,
-                    "//*[contains(text(), 'Error: debes seleccionar una opción.')]",
-                )
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
             )
-            == 1
         )
+        elements = self.driver.find_elements(By.TAG_NAME, "form")
+        self.assertEquals(len(elements), 3)
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_element(
+            By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una opción.')]"
+        )
+        self.assertIsNotNone(alert)
 
     def test_no_seleccion_opcion_yn(self):
         self.driver.get(f"{self.live_server_url}/booth/vote/{self.yn_voting.id}")
         self.login_when_booth()
-        self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "input")) == 2)
-
-        self.driver.find_element(By.TAG_NAME, "button").click()
-        self.assertTrue(
-            len(
-                self.driver.find_elements(
-                    By.XPATH,
-                    "//*[contains(text(), 'Error: debes seleccionar una opción.')]",
-                )
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
             )
-            == 1
         )
+        elements = self.driver.find_elements(By.TAG_NAME, "form")
+        self.assertEquals(len(elements), 2)
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_elements(
+            By.XPATH, "//*[contains(text(), 'Error: debes seleccionar una opción.')]"
+        )
+        self.assertIsNotNone(alert)
 
     def test_no_seleccion_opcion_ranking(self):
         self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
         self.login_when_booth()
-        self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "select")) == 3)
-        self.assertTrue(len(self.driver.find_elements(By.TAG_NAME, "option")) == 9)
-
-        self.driver.find_element(By.TAG_NAME, "button").click()
-        self.assertTrue(
-            len(
-                self.driver.find_elements(
-                    By.XPATH,
-                    "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
-                )
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
             )
-            == 1
         )
+        select_tags = self.driver.find_elements(By.TAG_NAME, "select")
+        option_tags = self.driver.find_elements(By.TAG_NAME, "option")
+        self.assertEquals(len(select_tags), 3)
+        self.assertEquals(len(option_tags), 9)
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_element(
+            By.XPATH,
+            "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
+        )
+        self.assertIsNotNone(alert)
 
     def test_seleccion_opcion_repetida_ranking(self):
         self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
         self.login_when_booth()
-        selects = self.driver.find_elements(By.TAG_NAME, "select")
-        self.assertTrue(len(selects) == 3)
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "//*[@id='app-booth']/div/div[2]/button")
+            )
+        )
+        select_tags = self.driver.find_elements(By.TAG_NAME, "select")
+        self.assertEquals(len(select_tags), 3)
 
-        for tag in selects:
+        for tag in select_tags:
             select = Select(tag)
             select.select_by_index(0)
 
-        self.driver.find_element(By.TAG_NAME, "button").click()
-        self.assertTrue(
-            len(
-                self.driver.find_elements(
-                    By.XPATH,
-                    "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
-                )
-            )
-            == 1
+        self.driver.find_element(
+            By.XPATH, "//*[@id='app-booth']/div/div[2]/button"
+        ).click()
+        alert = self.driver.find_elements(
+            By.XPATH,
+            "//*[contains(text(), 'Error: debes seleccionar una posición para cada opción.')]",
         )
+        self.assertIsNotNone(alert)
