@@ -555,7 +555,7 @@ class VotingRankingTestCase(BaseTestCase):
         )
         postp_selected = int("".join(postp))
 
-        self.assertIn(postp_selected, list(tally.keys()))    
+        self.assertIn(postp_selected, list(tally.keys()))
 
 class QuestionListTestCase(TestCase):
     def setUp(self):
@@ -619,7 +619,7 @@ class QuestionCreationTestCase(TestCase):
         self.assertTemplateUsed(response, '403.html')
         self.assertEqual(Question.objects.count(), 0)
         self.assertEqual(QuestionOption.objects.count(), 0)
-        
+
 class QuestionDeleteViewTest(TestCase):
     def setUp(self):
         self.client = Client()
