@@ -1,10 +1,17 @@
-#!/bin/sh
-cd decide/
+#!/usr/bin/env bash
+# exit on error
+set -o errexit
+
+pip install -r requirements.txt
+
+cd decide
 cp local_settings.deploy.py local_settings.py
-./manage.py createsuperuser --noinput
-./manage.py collectstatic --noinput
-./manage.py makemigrations
-./manage.py migrate
-gunicorn -w 5 decide.wsgi:application --timeout=500
+if [[ $CREATE_SUPERUSER ]]; 
+then
+    python manage.py createsuperuser --no-input
+fi
+python manage.py collectstatic --no-input
+python manage.py makemigrations
+python manage.py migrate
 
 
