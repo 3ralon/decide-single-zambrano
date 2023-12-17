@@ -248,8 +248,9 @@ class CensusVoting(TemplateView):
             if form.is_valid():
                 users = form.cleaned_data["user"]
                 for user in users:
-                    census = Census(voting_id=voting_id, voter_id=user.id)
-                    census.save()
+                    if not Census.objects.filter(voting_id=voting_id, voter_id=user.id).exists():
+                        census = Census(voting_id=voting_id, voter_id=user.id)
+                        census.save()
                 return redirect("voting_list")
             return render(request, "census_voting.html", {"form": form})
         else:
