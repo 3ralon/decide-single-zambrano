@@ -38,10 +38,10 @@ MIDDLEWARE = [
 ]
 
 STATIC_URL = "/static/"
-if not DEBUG:
+'''if not DEBUG:
     STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
+'''
 BASEURL = "https://{}".format(os.environ.get("RENDER_EXTERNAL_HOSTNAME"))
 
 APIS = {
