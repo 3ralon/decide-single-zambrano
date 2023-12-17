@@ -214,6 +214,11 @@ resultado accediendo a la siguiente url:
 
 ![Imagen 11: Visualizer](./resources/quickstart/10_visualizer.png)
 
+Ejecutar con render
+-------------------
+
+Acceder a: https://decide-bdqo.onrender.com/
+
 Ejecutar con docker
 -------------------
 
@@ -260,76 +265,6 @@ Lanzar tests:
 Lanzar una consola SQL:
 
     $ docker exec -ti decide_db ash -c "su - postgres -c 'psql postgres'"
-
-Ejecutar con vagrant + ansible
-------------------------------
-
-Existe una configuración de vagrant que crea una máquina virtual con todo
-lo necesario instalado y listo para funcionar. La configuración está en
-vagrant/Vagrantfile y por defecto utiliza Virtualbox, por lo que para
-que esto funcione debes tener instalado en tu sistema vagrant y Virtualbox.
-
-Crear la máquina virtual con vagrant:
-
-    $ cd vagrant
-    $ vagrant up
-
-Una vez creada podremos acceder a la web, con el usuario admin/admin:
-
-http://localhost:8080/admin
-
-Acceder por ssh a la máquina:
-
-    $ vagrant ssh
-
-Esto nos dará una consola con el usuario vagrant, que tiene permisos de
-sudo, por lo que podremos acceder al usuario administrador con:
-
-    $ sudo su
-
-Parar la máquina virtual:
-
-    $ vagrant stop
-
-Una vez parada la máquina podemos volver a lanzarla con `vagrant up`.
-
-Eliminar la máquina virtual:
-
-    $ vagrant destroy
-
-Ansible
--------
-
-El provisionamiento de la aplicación con vagrant está hecho con Ansible,
-algo que nos permite utilizarlo de forma independiente para provisionar
-una instalación de Decide en uno o varios servidores remotos con un
-simple comando.
-
-    $ cd vagrant
-    $ ansible-playbook -i inventory playbook.yml
-
-Para que esto funcione debes definir un fichero [inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html)
-con los servidores destino.
-
-Los scripts de ansible están divididos en varios ficheros .yml donde
-se definen las diferentes tareas, por lo que es posible lanzar partes
-independientes:
-
-  * packages.yml, dependencias del sistema
-  * user.yml, creación de usuario decide
-  * python.yml, git clone del repositorio e instalación de dependencias python en virtualenv
-  * files.yml, ficheros de configuración, systemd, nginx y local\_settings.py
-  * database.yml, creación de usuario y base de datos postgres
-  * django.yml, comandos django básicos y creación de usuario admin
-  * services.yml, reinicio de servicios, decide, nginx y postgres
-
-Por ejemplo este comando sólo reinicia los servicios en el servidor:
-
-    $ ansible-playbook -i inventory -t services
-
-El provisionamiento de ansible está diseñado para funcionar con **ubuntu/bionic64**,
-para funcionar con otras distribuciones es posible que haga falta modificar
-el fichero packages.yml.
 
 Versionado
 ----------
@@ -476,18 +411,50 @@ Versiones actuales
 En las ultimas actualizaciones se han modificado las versiones usadas por la aplicación Decide. Las
 versiones usadas actualmente se corresponden a las siguientes:
 
-* Django = 4.1
-* pycryptodome = 3.15.0
-* djangorestframework = 3.14.0
-* django-cors-headers = 3.13.0
-* requests = 2.28.1
-* django-filter = 22.1
-* psycopg2 = 2.9.4
-* coverage = 6.5.0
-* jsonnet = 0.18.0
-* django-nose = 1.4.6
-* django-rest-swagger = 2.2.0
-* Python = 3.9
-* Vue=3
-* Bootstrap=5.2
-* selenium = 4.7.2
+* Jinja2==3.1.2
+* jsonnet==0.18.0
+* MarkupSafe==2.1.3
+* nose==1.3.7
+* openapi-codec==1.3.2
+* outcome==1.3.0.post0
+* psycopg2==2.9.4
+* pycryptodome==3.15.0
+* pynose==1.4.8
+* PySocks==1.7.1
+* pytz==2023.3.post1
+* requests==2.28.1
+* selenium==4.7.2
+* simplejson==3.19.2
+* sniffio==1.3.0
+* sortedcontainers==2.4.0
+* sqlparse==0.4.4
+* trio==0.23.1
+* trio-websocket==0.11.1
+* typing_extensions==4.8.0
+* uritemplate==4.1.1
+* urllib3==1.26.18
+* wsproto==1.2.0
+* whitenoise==6.5.0
+* gunicorn==21.2.0
+* dj-database-url == 2.1.0
+* django-allauth
+* django-sslserver
+* django-environ
+* asgiref==3.7.2
+* attrs==23.1.0
+* certifi==2023.7.22
+* charset-normalizer==2.1.1
+* coreapi==2.3.3
+* coreschema==0.0.4
+* coverage==6.5.0
+* Django==4.1
+* django-cors-headers==3.13.0
+* django-filter==22.1
+* django-nose==1.4.6
+* django-rest-swagger==2.2.0
+* djangorestframework==3.14.0
+* exceptiongroup==1.1.3
+* h11==0.14.0
+* idna==3.4
+* itypes==1.2.0
+* pre-commit==3.5.0
