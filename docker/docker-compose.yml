@@ -25,6 +25,11 @@ services:
       - db
     networks:
       - decide
+    environment:
+      - SITE_ID=4
+      - SECURE_REFERRER_POLICY=None
+      - DJANGO_ALLOWED_HOSTS=["*"]
+
   nginx:
     restart: always
     container_name: decide_nginx
