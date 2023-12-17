@@ -906,7 +906,7 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
 
         # Opciones de Chrome
         options = webdriver.ChromeOptions()
-        options.headless = False
+        options.headless = True
         self.driver = webdriver.Chrome(options=options)
         self.driver.implicitly_wait(2)
         self.wait = WebDriverWait(self.driver, 2)
