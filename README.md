@@ -214,6 +214,11 @@ resultado accediendo a la siguiente url:
 
 ![Imagen 11: Visualizer](./resources/quickstart/10_visualizer.png)
 
+Ejecutar con render
+-------------------
+
+Acceder a: https://decide-bdqo.onrender.com/
+
 Ejecutar con docker
 -------------------
 
