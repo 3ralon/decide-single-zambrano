@@ -59,13 +59,4 @@ jobs:
       with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: decide/coverage.xml
-  deploy:
-    if: ${{ github.ref == 'main' || github.ref == 'develop' }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-    - name: Deploy
-      env:
-        deploy_url: ${{secrets.RENDER_DEPLOY_HOOK_URL}}
-      run: |
-        curl "$deploy_url"
+  
