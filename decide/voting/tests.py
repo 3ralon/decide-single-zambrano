@@ -1,9 +1,11 @@
 import random
 import itertools
+from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.test import Client, RequestFactory, TestCase
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import Select
@@ -18,6 +20,7 @@ from mixnet.mixcrypt import ElGamal
 from mixnet.mixcrypt import MixCrypt
 from mixnet.models import Auth
 from voting.models import Voting, Question, QuestionOption
+from voting.forms import QuestionForm, QuestionOptionFormSet, VotingForm
 
 
 class VotingTestCase(BaseTestCase):
@@ -555,6 +558,242 @@ class VotingRankingTestCase(BaseTestCase):
         self.assertIn(postp_selected, list(tally.keys()))
 
 
+class QuestionListTestCase(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(
+            username="test", password="test", is_staff=True
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_get_with_staff_user(self):
+        response = self.client.get("/voting/question/list/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "question_list.html")
+
+    def test_get_with_non_staff_user(self):
+        self.client.logout()
+        response = self.client.get("/voting/question/list/")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+
+
+class QuestionCreationTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="adminpassword"
+        )
+
+    def test_get_question_creation_as_admin(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("question_creation"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "question_creation.html")
+        self.assertIsInstance(response.context["form"], QuestionForm)
+        self.assertIsInstance(response.context["formset"], QuestionOptionFormSet)
+
+    def test_get_question_creation_as_non_admin(self):
+        response = self.client.get(reverse("question_creation"))
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+
+    def test_post_question_creation_as_admin(self):
+        self.client.force_login(self.admin_user)
+        data = {
+            "desc": "Sample question",
+            "question_type": "YESNO",
+        }
+        form = QuestionForm(data)
+        self.assertTrue(form.is_valid())
+        form.save()
+        self.assertEqual(Question.objects.count(), 1)
+
+    def test_post_question_creation_as_non_admin(self):
+        data = {
+            "desc": "Sample question",
+            "question_type": "YESNO",
+        }
+        response = self.client.post(reverse("question_creation"), data)
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+        self.assertEqual(Question.objects.count(), 0)
+        self.assertEqual(QuestionOption.objects.count(), 0)
+
+
+class QuestionDeleteViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="adminpassword"
+        )
+        self.question = Question.objects.create(desc="Test question")
+
+    def test_question_delete_post(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse("question_delete", args=[self.question.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("question_list"))
+        self.assertFalse(Question.objects.filter(pk=self.question.id).exists())
+
+    def test_question_delete_post_unauthorized(self):
+        response = self.client.post(reverse("question_delete", args=[self.question.id]))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+        self.assertTrue(Question.objects.filter(pk=self.question.id).exists())
+
+    def test_question_delete_post_nonexistent_question(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse("question_delete", args=[999]))
+
+        self.assertEqual(response.status_code, 404)
+
+
+class VotingListTestCase(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = User.objects.create_user(
+            username="test", password="test", is_staff=True
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_get_with_staff_user(self):
+        response = self.client.get("/voting/list/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "voting_list.html")
+
+    def test_get_with_non_staff_user(self):
+        self.client.logout()
+        response = self.client.get("/voting/list/")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+
+
+class VotingActionsTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="adminpassword"
+        )
+        q = Question(desc="Descripcion")
+        q.save()
+
+        opt1 = QuestionOption(question=q, option="opcion 1")
+        opt1.save()
+        opt1 = QuestionOption(question=q, option="opcion 2")
+        opt1.save()
+
+        self.voting = Voting(name="Votacion", question=q)
+        self.voting.save()
+
+    def test_start_voting(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("voting_start", args=[self.voting.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("voting_list"))
+        self.voting.refresh_from_db()
+        self.assertIsNotNone(self.voting.start_date)
+
+    def test_stop_voting(self):
+        self.voting.create_pubkey()
+        self.voting.start_date = timezone.now()
+        self.voting.save()
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("voting_stop", args=[self.voting.id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("voting_list"))
+        self.voting.refresh_from_db()
+        self.assertIsNotNone(self.voting.end_date)
+
+
+class VotingCreationTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="adminpassword"
+        )
+        self.q = Question(desc="Descripcion")
+        self.q.save()
+        self.auth = Auth.objects.create(url=settings.BASEURL, me=True, name="test auth")
+
+    def test_get_voting_creation_as_admin(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("voting_creation"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "voting_creation.html")
+        self.assertIsInstance(response.context["form"], VotingForm)
+
+    def test_get_voting_creation_as_non_admin(self):
+        response = self.client.get(reverse("voting_creation"))
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+
+    def test_post_voting_creation_as_admin(self):
+        self.client.force_login(self.admin_user)
+        data = {
+            "name": "Sample Voting",
+            "desc": "Sample description",
+            "question": self.q,
+            "auths": [self.auth],
+        }
+        form = VotingForm(data)
+        self.assertTrue(form.is_valid())
+        form.save()
+        self.assertEqual(Voting.objects.count(), 1)
+
+    def test_post_voting_creation_as_non_admin(self):
+        data = {
+            "name": "Sample Voting",
+            "desc": "Sample description",
+            "question": self.q,
+            "auths": [self.auth],
+        }
+        response = self.client.post(reverse("question_creation"), data)
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+        self.assertEqual(Voting.objects.count(), 0)
+
+
+class VotingDeleteViewTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_superuser(
+            username="admin", email="admin@example.com", password="adminpassword"
+        )
+        q = Question.objects.create(desc="Test question")
+        q.save()
+        self.voting = Voting.objects.create(
+            name="Test voting", desc="Test voting description", question=q
+        )
+
+    def test_voting_delete_post(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse("voting_delete", args=[self.voting.id]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("voting_list"))
+        self.assertFalse(Voting.objects.filter(pk=self.voting.id).exists())
+
+    def test_voting_delete_post_unauthorized(self):
+        response = self.client.post(reverse("voting_delete", args=[self.voting.id]))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "403.html")
+        self.assertTrue(Voting.objects.filter(pk=self.voting.id).exists())
+
+    def test_voting_delete_post_nonexistent_question(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse("voting_delete", args=[999]))
+
+        self.assertEqual(response.status_code, 404)
+
+
 class VotingLimitsTestCase(StaticLiveServerTestCase):
     def create_votings(self):
 
@@ -580,6 +819,8 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         )
         default_voting.save()
         default_voting.auths.add(auth)
+        census_default = Census(voting_id=default_voting.id, voter_id=self.admin.id)
+        census_default.save()
 
         # Yes/No
         yn_question = Question(desc="Pregunta YN", question_type="YESNO")
@@ -593,6 +834,8 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         )
         yn_voting.save()
         yn_voting.auths.add(auth)
+        yn_census = Census(voting_id=yn_voting.id, voter_id=self.admin.id)
+        yn_census.save()
 
         # Ranking
         ranking_question = Question(desc="Pregunta ranking", question_type="RANKING")
@@ -609,12 +852,24 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         )
         ranking_voting.save()
         ranking_voting.auths.add(auth)
+        ranking_census = Census(voting_id=ranking_voting.id, voter_id=self.admin.id)
+        ranking_census.save()
 
         default_voting.create_pubkey()
         yn_voting.create_pubkey()
         ranking_voting.create_pubkey()
 
         return default_voting, yn_voting, ranking_voting
+
+    def login_before_booth(self):
+        self.wait.until(
+            EC.presence_of_all_elements_located((By.XPATH, "/html/body/form/button"))
+        )
+        input_username = self.driver.find_element(By.XPATH, "//*[@id='id_login']")
+        input_username.send_keys("admin")
+        input_password = self.driver.find_element(By.XPATH, "//*[@id='id_password']")
+        input_password.send_keys("qwerty")
+        self.driver.find_element(By.XPATH, "/html/body/form/button").click()
 
     def login_when_booth(self):
         self.driver.find_element(
@@ -640,6 +895,8 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         # Selenium Setup
         self.base = BaseTestCase()
         self.base.setUp()
+        self.admin = User.objects.get(username="admin")
+        self.base.client.force_login(user=self.admin)
 
         (
             self.default_voting,
@@ -661,7 +918,15 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         self.base.tearDown()
 
     def test_no_seleccion_opcion_default(self):
-        self.driver.get(f"{self.live_server_url}/booth/vote/{self.default_voting.id}/")
+        self.driver.get(f"{self.live_server_url}")
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[1]/a").click()
+        self.login_before_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "/html/body/div/div/ul/li[1]/a")
+            )
+        )
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[1]/a").click()
         self.login_when_booth()
         self.wait.until(
             EC.presence_of_all_elements_located(
@@ -679,7 +944,15 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         self.assertIsNotNone(alert)
 
     def test_no_seleccion_opcion_yn(self):
-        self.driver.get(f"{self.live_server_url}/booth/vote/{self.yn_voting.id}")
+        self.driver.get(f"{self.live_server_url}")
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[2]/a").click()
+        self.login_before_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "/html/body/div/div/ul/li[2]/a")
+            )
+        )
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[2]/a").click()
         self.login_when_booth()
         self.wait.until(
             EC.presence_of_all_elements_located(
@@ -697,7 +970,15 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         self.assertIsNotNone(alert)
 
     def test_no_seleccion_opcion_ranking(self):
-        self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
+        self.driver.get(f"{self.live_server_url}")
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[3]/a").click()
+        self.login_before_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "/html/body/div/div/ul/li[3]/a")
+            )
+        )
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[3]/a").click()
         self.login_when_booth()
         self.wait.until(
             EC.presence_of_all_elements_located(
@@ -718,7 +999,15 @@ class VotingLimitsTestCase(StaticLiveServerTestCase):
         self.assertIsNotNone(alert)
 
     def test_seleccion_opcion_repetida_ranking(self):
-        self.driver.get(f"{self.live_server_url}/booth/vote/{self.ranking_voting.id}")
+        self.driver.get(f"{self.live_server_url}")
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[3]/a").click()
+        self.login_before_booth()
+        self.wait.until(
+            EC.presence_of_all_elements_located(
+                (By.XPATH, "/html/body/div/div/ul/li[3]/a")
+            )
+        )
+        self.driver.find_element(By.XPATH, "/html/body/div/div/ul/li[3]/a").click()
         self.login_when_booth()
         self.wait.until(
             EC.presence_of_all_elements_located(
