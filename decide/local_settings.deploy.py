@@ -10,7 +10,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-DEBUG = "RENDER" not in os.environ
+DEBUG = True
 
 # Modules in use, commented modules that you won't use
 MODULES = [
