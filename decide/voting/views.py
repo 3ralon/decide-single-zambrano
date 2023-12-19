@@ -168,7 +168,6 @@ class VotingList(TemplateView):
             voting = get_object_or_404(Voting, pk=voting_id)
             if voting.start_date:
                 return HttpResponseRedirect(reverse("voting_list"))
-            voting.create_pubkey()
             voting.start_date = timezone.now()
             voting.save()
             return redirect("voting_list")
