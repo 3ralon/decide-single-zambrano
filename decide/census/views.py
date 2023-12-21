@@ -35,6 +35,7 @@ class CensusExportationToCSV(TemplateView):
         return super().get(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        print('Aquí lo haría')
         if not request.user.is_superuser or not request.user.is_staff:
             return HttpResponseForbidden(
                 "Solo los superuser o staff pueden descargar los datos del censo"
